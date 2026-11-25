@@ -1,50 +1,78 @@
-import React, { useState, useEffect } from "react";
-import Preloader from "../src/components/Pre";
-import Navbar from "./components/Navbar";
-import Home from "./components/Home/Home";
-import About from "./components/About/About";
-import Projects from "./components/Projects/Projects";
-import Footer from "./components/Footer";
-import Resume from "./components/Resume/ResumeNew";
+import React, { useState, useCallback, useRef } from "react";
 import {
   BrowserRouter as Router,
-  Route,
   Routes,
-  Navigate
+  Route,
+  Navigate,
 } from "react-router-dom";
-import ScrollToTop from "./components/ScrollToTop";
-import "./style.css";
-import "./App.css";
-import "bootstrap/dist/css/bootstrap.min.css";
+import { TransitionProvider } from "./components/TransitionContext";
+import Preloader from "./components/Common/Preloader";
+import NavBar from "./components/Chrome/NavBar";
+import FooterBar from "./components/Chrome/FooterBar";
+import HomePage from "./pages/HomePage";
+import WorksPage from "./pages/WorksPage";
+import ProjectDetailPage from "./pages/ProjectDetailPage";
+import AboutPage from "./pages/AboutPage";
+import ContactPage from "./pages/ContactPage";
+import ResumePage from "./pages/ResumePage";
+import "./styles/editorial.css";
 
-function App() {
-  const [load, upadateLoad] = useState(true);
+function AppShell() {
+  const [scrollState, setScrollState] = useState({ progress: 0, chapter: 0 });
+  const [preloaderDone, setPreloaderDone] = useState(false);
+  const jumpHandlerRef = useRef(null);
 
-  useEffect(() => {
-    const timer = setTimeout(() => {
-      upadateLoad(false);
-    }, 1200);
+  const handleProgressChange = useCallback((progress, chapter) => {
+    setScrollState({ progress, chapter });
+  }, []);
 
-    return () => clearTimeout(timer);
+  const registerJumpHandler = useCallback((fn) => {
+    jumpHandlerRef.current = fn;
+  }, []);
+
+  const handleJumpChapter = useCallback((chapterIndex) => {
+    if (jumpHandlerRef.current) {
+      jumpHandlerRef.current(chapterIndex);
+    }
   }, []);
 
   return (
-    <Router>
-      <Preloader load={load} />
-      <div className="App" id={load ? "no-scroll" : "scroll"}>
-        <Navbar />
-        <ScrollToTop />
+    <TransitionProvider>
+      {!preloaderDone && <Preloader onComplete={() => setPreloaderDone(true)} />}
+      <div className="ed-app">
+        <NavBar />
         <Routes>
-          <Route path="/" element={<Home />} />
-          <Route path="/project" element={<Projects />} />
-          <Route path="/about" element={<About />} />
-          <Route path="/resume" element={<Resume />} />
-          <Route path="*" element={<Navigate to="/"/>} />
+          <Route
+            path="/"
+            element={
+              <HomePage
+                onProgressChange={handleProgressChange}
+                registerJumpHandler={registerJumpHandler}
+              />
+            }
+          />
+          <Route path="/works" element={<WorksPage />} />
+          <Route path="/works/:slug" element={<ProjectDetailPage />} />
+          <Route path="/project" element={<Navigate to="/works" replace />} />
+          <Route path="/about" element={<AboutPage />} />
+          <Route path="/contact" element={<ContactPage />} />
+          <Route path="/resume" element={<ResumePage />} />
+          <Route path="*" element={<Navigate to="/" replace />} />
         </Routes>
-        <Footer />
+        <FooterBar
+          scrollProgress={scrollState.progress}
+          activeChapter={scrollState.chapter}
+          onJumpChapter={handleJumpChapter}
+        />
       </div>
-    </Router>
+    </TransitionProvider>
   );
 }
 
-export default App;
+export default function App() {
+  return (
+    <Router>
+      <AppShell />
+    </Router>
+  );
+}
