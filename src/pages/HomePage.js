@@ -316,12 +316,17 @@ export default function HomePage({ ready = true, onProgressChange, registerJumpH
       <div ref={trackRef} className="home-track">
         {/* PANEL 01 — RADICAL SIMPLICITY HERO */}
         <section className="home-panel panel-intro" data-chapter="0">
-          <div className="panel-intro-grid">
+          <motion.div
+            className="panel-intro-grid"
+            initial={{ scale: 1.025 }}
+            animate={ready ? { scale: 1 } : { scale: 1.025 }}
+            transition={{ duration: 0.85, ease: [0.16, 1, 0.3, 1] }}
+          >
             <motion.div
               className="intro-top-left"
-              initial={{ opacity: 0, y: 12 }}
-              animate={ready ? { opacity: 1, y: 0 } : { opacity: 0, y: 12 }}
-              transition={{ duration: 0.6, delay: 0.12, ease: [0.16, 1, 0.3, 1] }}
+              initial={{ opacity: 0, y: 14 }}
+              animate={ready ? { opacity: 1, y: 0 } : { opacity: 0, y: 14 }}
+              transition={{ duration: 0.65, delay: 0.14, ease: [0.16, 1, 0.3, 1] }}
             >
               <div className="section-index">01/</div>
               <div className="intro-origin">
@@ -332,10 +337,10 @@ export default function HomePage({ ready = true, onProgressChange, registerJumpH
             {/* Title stays "Creative Developer." */}
             <div className="intro-top-right">
               <h1 className="hero-display hero-display-right">
-                <MaskedLine ready={ready} delay={0.04}>
+                <MaskedLine ready={ready} delay={0.1}>
                   CREATIVE
                 </MaskedLine>
-                <MaskedLine ready={ready} delay={0.12}>
+                <MaskedLine ready={ready} delay={0.17}>
                   DEVELOPER<span className="accent">.</span>
                 </MaskedLine>
               </h1>
@@ -343,10 +348,10 @@ export default function HomePage({ ready = true, onProgressChange, registerJumpH
 
             <div className="intro-bottom-left">
               <div className="hero-display hero-display-left" aria-label={PROFILE.fullName}>
-                <MaskedLine ready={ready} delay={0.18}>
+                <MaskedLine ready={ready} delay={0.2}>
                   SELASI
                 </MaskedLine>
-                <MaskedLine ready={ready} delay={0.26}>
+                <MaskedLine ready={ready} delay={0.27}>
                   DZEAMESI
                 </MaskedLine>
               </div>
@@ -354,9 +359,9 @@ export default function HomePage({ ready = true, onProgressChange, registerJumpH
 
             <motion.div
               className="intro-bottom-right"
-              initial={{ opacity: 0, y: 20 }}
-              animate={ready ? { opacity: 1, y: 0 } : { opacity: 0, y: 20 }}
-              transition={{ duration: 0.72, delay: 0.22, ease: [0.16, 1, 0.3, 1] }}
+              initial={{ opacity: 0, y: 24 }}
+              animate={ready ? { opacity: 1, y: 0 } : { opacity: 0, y: 24 }}
+              transition={{ duration: 0.72, delay: 0.18, ease: [0.16, 1, 0.3, 1] }}
             >
               <DraggablePortrait />
               <div className="intro-bio-row">
@@ -368,7 +373,7 @@ export default function HomePage({ ready = true, onProgressChange, registerJumpH
                 </p>
               </div>
             </motion.div>
-          </div>
+          </motion.div>
         </section>
 
         {/* PANEL 02 — CAPABILITIES & DISCIPLINES */}
