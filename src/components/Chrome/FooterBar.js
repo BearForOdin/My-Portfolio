@@ -13,7 +13,12 @@ const CHAPTERS = [
 export default function FooterBar({ scrollProgress = 0, activeChapter = 0, onJumpChapter }) {
   const location = useLocation();
   const isHome = location.pathname === "/";
+  const isContact = location.pathname === "/contact";
   const year = new Date().getFullYear();
+
+  // Only pin fixed bottom chrome on single-viewport canvases (Home & Contact);
+  // scrollable editorial pages render the copyright bar cleanly inside DarkOutro
+  if (!isHome && !isContact) return null;
 
   return (
     <footer className="ed-footerbar">
@@ -22,29 +27,31 @@ export default function FooterBar({ scrollProgress = 0, activeChapter = 0, onJum
           <span>© {year} Portfolio</span>
         </div>
 
-        {isHome && (
-          <div className="ed-footer-center" aria-label="Scroll progress">
-            <div className="ed-chapter-dots">
-              {CHAPTERS.map((ch) => (
-                <button
-                  key={ch.id}
-                  type="button"
-                  className={`ed-chapter-dot ${activeChapter === ch.id ? "is-active" : ""}`}
-                  onClick={() => onJumpChapter && onJumpChapter(ch.id)}
-                  title={`Jump to ${ch.label}/`}
-                >
-                  {ch.label}
-                </button>
-              ))}
-            </div>
-            <div className="ed-progress-track">
-              <div
-                className="ed-progress-fill"
-                style={{ transform: `scaleX(${Math.max(0.03, Math.min(1, scrollProgress))})` }}
-              />
-            </div>
-          </div>
-        )}
+        <div className="ed-footer-center" aria-label="Scroll progress">
+          {isHome && (
+            <>
+              <div className="ed-chapter-dots">
+                {CHAPTERS.map((ch) => (
+                  <button
+                    key={ch.id}
+                    type="button"
+                    className={`ed-chapter-dot ${activeChapter === ch.id ? "is-active" : ""}`}
+                    onClick={() => onJumpChapter && onJumpChapter(ch.id)}
+                    title={`Jump to ${ch.label}/`}
+                  >
+                    {ch.label}
+                  </button>
+                ))}
+              </div>
+              <div className="ed-progress-track">
+                <div
+                  className="ed-progress-fill"
+                  style={{ transform: `scaleX(${Math.max(0.03, Math.min(1, scrollProgress))})` }}
+                />
+              </div>
+            </>
+          )}
+        </div>
 
         <div className="ed-footer-right">
           <span className="ed-footer-credit">

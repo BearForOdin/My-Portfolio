@@ -11,7 +11,22 @@ export default function NavBar() {
   const { copyText, setCursorVariant } = usePageTransition();
   const [menuOpen, setMenuOpen] = useState(false);
   const [emailOpen, setEmailOpen] = useState(false);
+  const [scrolled, setScrolled] = useState(false);
   const popoverRef = useRef(null);
+
+  const isScrollablePage =
+    location.pathname !== "/" && location.pathname !== "/contact";
+
+  useEffect(() => {
+    if (!isScrollablePage) {
+      setScrolled(false);
+      return;
+    }
+    const onScroll = () => setScrolled(window.scrollY > 24);
+    onScroll();
+    window.addEventListener("scroll", onScroll, { passive: true });
+    return () => window.removeEventListener("scroll", onScroll);
+  }, [isScrollablePage, location.pathname]);
 
   useEffect(() => {
     if (!emailOpen) return;
@@ -43,7 +58,7 @@ export default function NavBar() {
 
   return (
     <>
-      <header className="ed-navbar">
+      <header className={`ed-navbar ${isScrollablePage && scrolled ? "is-scrolled" : ""}`}>
         <div className="ed-navbar-inner">
           {/* Left: Kinetic expanding logo */}
           <TransitionLink

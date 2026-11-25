@@ -60,21 +60,29 @@ export default function DarkOutro({ onBack, backLabel = "Back to top", isHorizon
         </div>
 
         <div className="ed-outro-socials">
-          <a href={PROFILE.socials.github} target="_blank" rel="noopener noreferrer">
-            GitHub ↗
-          </a>
-          <a href={PROFILE.socials.linkedin} target="_blank" rel="noopener noreferrer">
-            LinkedIn ↗
-          </a>
-          <a href={PROFILE.socials.medium} target="_blank" rel="noopener noreferrer">
-            Medium ↗
-          </a>
-          <a href={PROFILE.socials.twitter} target="_blank" rel="noopener noreferrer">
-            X ↗
-          </a>
-          <TransitionLink to="/resume" label="RESUME">
-            Resume ↗
-          </TransitionLink>
+          <div className="ed-outro-social-links">
+            <a href={PROFILE.socials.github} target="_blank" rel="noopener noreferrer">
+              GitHub ↗
+            </a>
+            <a href={PROFILE.socials.linkedin} target="_blank" rel="noopener noreferrer">
+              LinkedIn ↗
+            </a>
+            <a href={PROFILE.socials.medium} target="_blank" rel="noopener noreferrer">
+              Medium ↗
+            </a>
+            <a href={PROFILE.socials.twitter} target="_blank" rel="noopener noreferrer">
+              X ↗
+            </a>
+            <TransitionLink to="/resume" label="RESUME">
+              Resume ↗
+            </TransitionLink>
+          </div>
+          {!isHorizontal && (
+            <div className="ed-outro-legal">
+              <span>© {new Date().getFullYear()} Portfolio</span>
+              <span>Design &amp; code by {PROFILE.firstName}</span>
+            </div>
+          )}
         </div>
       </div>
     </section>
