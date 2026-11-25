@@ -1,137 +1,99 @@
-import React, { useEffect, useState } from "react";
-import { motion, AnimatePresence, animate } from "framer-motion";
+import React, { useEffect, useState, useRef } from "react";
+import { motion, animate } from "framer-motion";
 
-const CURTAIN_COVERED = "M 0 0 V 100 Q 50 100 100 100 V 0 z";
-const CURTAIN_CURVE = "M 0 0 V 50 Q 50 100 100 50 V 0 z";
-const CURTAIN_GONE = "M 0 0 V 0 Q 50 0 100 0 V 0 z";
-
-const WORDS = [
+const REEL_WORDS = [
   { text: "OWN", accent: false },
   { text: "THE", accent: false },
   { text: "SPACE", accent: true },
 ];
 
-export default function Preloader({ onComplete }) {
+export default function Preloader({ onReveal, onComplete }) {
   const [percent, setPercent] = useState(0);
-  const [stage, setStage] = useState("loading"); // loading | wordsOut | curtainOut | done
+  // slotIndex: -1 (below mask) -> 0 ("OWN") -> 1 ("THE") -> 2 ("SPACE") -> 3 (rolled out above)
+  const [slotIndex, setSlotIndex] = useState(-1);
+  const [exiting, setExiting] = useState(false);
+
+  const onRevealRef = useRef(onReveal);
+  const onCompleteRef = useRef(onComplete);
+  onRevealRef.current = onReveal;
+  onCompleteRef.current = onComplete;
 
   useEffect(() => {
     const controls = animate(0, 100, {
-      duration: 1.55,
-      ease: [0.22, 1, 0.36, 1],
+      duration: 2.15,
+      ease: [0.32, 0, 0.24, 1],
       onUpdate: (latest) => setPercent(Math.round(latest)),
-      onComplete: () => setStage("wordsOut"),
     });
-    return () => controls.stop();
+
+    const timers = [];
+    const at = (ms, fn) => timers.push(setTimeout(fn, ms));
+
+    // Single clean word rollout: OWN -> THE -> SPACE -> roll out & fade away
+    at(80, () => setSlotIndex(0)); // OWN
+    at(760, () => setSlotIndex(1)); // THE
+    at(1440, () => setSlotIndex(2)); // SPACE
+    at(2140, () => {
+      setSlotIndex(3); // roll SPACE cleanly out top
+      setExiting(true);
+      if (onRevealRef.current) onRevealRef.current();
+    });
+    at(2760, () => {
+      if (onCompleteRef.current) onCompleteRef.current();
+    });
+
+    return () => {
+      controls.stop();
+      timers.forEach(clearTimeout);
+    };
   }, []);
 
-  useEffect(() => {
-    if (stage === "wordsOut") {
-      const t = setTimeout(() => setStage("curtainOut"), 360);
-      return () => clearTimeout(t);
-    }
-    if (stage === "curtainOut") {
-      const t = setTimeout(() => {
-        setStage("done");
-        if (onComplete) onComplete();
-      }, 720);
-      return () => clearTimeout(t);
-    }
-  }, [stage, onComplete]);
-
   return (
-    <AnimatePresence>
-      {stage !== "done" && (
-        <motion.div
-          className="pl-overlay"
-          role="status"
-          aria-label={`Loading ${percent}%`}
-          initial={{ opacity: 1 }}
-          exit={{ opacity: 0, transition: { duration: 0.15 } }}
-        >
-          {/* Curved SVG Curtain Background (matching douglus.site exit wave) */}
-          <svg
-            className="pl-svg"
-            viewBox="0 0 100 100"
-            preserveAspectRatio="none"
-            aria-hidden="true"
-          >
-            <motion.path
-              fill="#0e0e0e"
-              initial={{ d: CURTAIN_COVERED }}
-              animate={
-                stage === "curtainOut"
-                  ? {
-                      d: [CURTAIN_COVERED, CURTAIN_CURVE, CURTAIN_GONE],
-                    }
-                  : { d: CURTAIN_COVERED }
-              }
-              transition={
-                stage === "curtainOut"
-                  ? {
-                      duration: 0.72,
-                      times: [0, 0.48, 1],
-                      ease: [0.76, 0, 0.24, 1],
-                    }
-                  : { duration: 0 }
-              }
-            />
-          </svg>
-
-          {/* Foreground: ONLY left-aligned "OWN THE SPACE" + percentage */}
-          <div className="pl-inner">
-            <div className="pl-left-stage">
-              <div className="pl-phrase" aria-label="OWN THE SPACE">
-                {WORDS.map((word, idx) => {
-                  const reverseIdx = WORDS.length - 1 - idx;
-                  const isExiting = stage === "wordsOut" || stage === "curtainOut";
-                  return (
-                    <span key={word.text} className="pl-word-mask">
-                      <motion.span
-                        className={`pl-word ${word.accent ? "pl-word-accent" : ""}`}
-                        initial={{ y: "115%", opacity: 0 }}
-                        animate={
-                          isExiting
-                            ? { y: "-115%", opacity: 0 }
-                            : { y: "0%", opacity: 1 }
-                        }
-                        transition={
-                          isExiting
-                            ? {
-                                duration: 0.42,
-                                delay: reverseIdx * 0.045,
-                                ease: [0.55, 0.055, 0.675, 0.19],
-                              }
-                            : {
-                                duration: 0.65,
-                                delay: 0.06 + idx * 0.075,
-                                ease: [0.215, 0.61, 0.355, 1],
-                              }
-                        }
-                      >
-                        {word.text}
-                      </motion.span>
-                    </span>
-                  );
-                })}
-              </div>
-            </div>
-
+    <motion.div
+      className="pl-overlay"
+      role="status"
+      aria-label={`Loading ${percent}%`}
+      initial={{ opacity: 1 }}
+      animate={{ opacity: exiting ? 0 : 1 }}
+      transition={
+        exiting
+          ? { duration: 0.52, delay: 0.12, ease: [0.455, 0.03, 0.515, 0.955] }
+          : { duration: 0 }
+      }
+      style={{ pointerEvents: exiting ? "none" : "all" }}
+    >
+      <div className="pl-inner">
+        <div className="pl-left-stage">
+          <div className="pl-word-wrap" aria-label="OWN THE SPACE">
             <motion.div
-              className="pl-counter"
-              initial={{ opacity: 0, y: 12 }}
-              animate={
-                stage === "wordsOut" || stage === "curtainOut"
-                  ? { opacity: 0, y: -12 }
-                  : { opacity: 1, y: 0 }
-              }
-              transition={{ duration: 0.35, ease: [0.215, 0.61, 0.355, 1] }}
+              className="pl-word-rail"
+              initial={{ y: "100%" }}
+              animate={{ y: `${-slotIndex * 100}%` }}
+              transition={{
+                duration: slotIndex === 3 ? 0.34 : 0.38,
+                ease: [0.37, 0, 0.63, 1],
+              }}
             >
-              {percent}%
+              {REEL_WORDS.map((w) => (
+                <div
+                  key={w.text}
+                  className={`pl-reel-word ${w.accent ? "pl-word-accent" : ""}`}
+                >
+                  {w.text}
+                </div>
+              ))}
             </motion.div>
           </div>
+        </div>
+
+        <motion.div
+          className="pl-counter"
+          initial={{ opacity: 0, y: 8 }}
+          animate={{ opacity: exiting ? 0 : 1, y: exiting ? -8 : 0 }}
+          transition={{ duration: 0.25, ease: [0.455, 0.03, 0.515, 0.955] }}
+        >
+          {percent}%
         </motion.div>
-      )}
-    </AnimatePresence>
+      </div>
+    </motion.div>
   );
 }

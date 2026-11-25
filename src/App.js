@@ -8,6 +8,7 @@ import {
 import { TransitionProvider } from "./components/TransitionContext";
 import Preloader from "./components/Common/Preloader";
 import CustomCursor from "./components/Common/CustomCursor";
+import GrainOverlay from "./components/Common/GrainOverlay";
 import NavBar from "./components/Chrome/NavBar";
 import FooterBar from "./components/Chrome/FooterBar";
 import HomePage from "./pages/HomePage";
@@ -20,6 +21,7 @@ import "./styles/editorial.css";
 
 function AppShell() {
   const [scrollState, setScrollState] = useState({ progress: 0, chapter: 0 });
+  const [heroReady, setHeroReady] = useState(false);
   const [preloaderDone, setPreloaderDone] = useState(false);
   const jumpHandlerRef = useRef(null);
 
@@ -37,10 +39,25 @@ function AppShell() {
     }
   }, []);
 
+  const handleRevealHero = useCallback(() => {
+    setHeroReady(true);
+  }, []);
+
+  const handlePreloaderComplete = useCallback(() => {
+    setHeroReady(true);
+    setPreloaderDone(true);
+  }, []);
+
   return (
     <TransitionProvider>
-      {!preloaderDone && <Preloader onComplete={() => setPreloaderDone(true)} />}
+      {!preloaderDone && (
+        <Preloader
+          onReveal={handleRevealHero}
+          onComplete={handlePreloaderComplete}
+        />
+      )}
       <CustomCursor />
+      <GrainOverlay />
       <div className="ed-app">
         <NavBar />
         <Routes>
@@ -48,7 +65,7 @@ function AppShell() {
             path="/"
             element={
               <HomePage
-                ready={preloaderDone}
+                ready={heroReady}
                 onProgressChange={handleProgressChange}
                 registerJumpHandler={registerJumpHandler}
               />

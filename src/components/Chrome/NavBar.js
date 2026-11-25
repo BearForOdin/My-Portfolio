@@ -14,8 +14,18 @@ export default function NavBar() {
   const [scrolled, setScrolled] = useState(false);
   const popoverRef = useRef(null);
 
+  const [isMobile, setIsMobile] = useState(
+    typeof window !== "undefined" ? window.innerWidth < 1024 : false
+  );
+
+  useEffect(() => {
+    const onResize = () => setIsMobile(window.innerWidth < 1024);
+    window.addEventListener("resize", onResize);
+    return () => window.removeEventListener("resize", onResize);
+  }, []);
+
   const isScrollablePage =
-    location.pathname !== "/" && location.pathname !== "/contact";
+    (location.pathname !== "/" || isMobile) && location.pathname !== "/contact";
 
   useEffect(() => {
     if (!isScrollablePage) {

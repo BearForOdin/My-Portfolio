@@ -1,5 +1,5 @@
 import React, { useEffect, useRef, useState, useCallback } from "react";
-import { motion, AnimatePresence } from "framer-motion";
+import { motion, AnimatePresence, useMotionValue, useSpring, useTransform } from "framer-motion";
 import { TransitionLink, usePageTransition } from "../components/TransitionContext";
 import MagneticButton from "../components/Common/MagneticButton";
 import DarkOutro from "../components/Common/DarkOutro";
@@ -7,6 +7,7 @@ import ProjectVisual from "../components/Common/ProjectVisual";
 import { BullseyeEmblem, SmileyEmblem, NodeEmblem } from "../components/Common/Emblems";
 import { PROFILE, DISCIPLINES, PROJECTS } from "../data/portfolioData";
 import portraitImg from "../Assets/profhead.png";
+import statueImg from "../Assets/nkrumah-statue.png";
 
 const TRAIL_COUNT = 8;
 
@@ -142,6 +143,18 @@ export default function HomePage({ ready = true, onProgressChange, registerJumpH
   );
   const [activeDiscipline, setActiveDiscipline] = useState("frontend");
   const [featuredIdx, setFeaturedIdx] = useState(0);
+  const [ePointed, setEPointed] = useState(false);
+
+  // Scroll-driven motion value for Panel 04 statue pop-out (0 = tucked, 1 = hanging halfway pointing dead-on at E)
+  const panel4Raw = useMotionValue(0);
+  const panel4Spring = useSpring(panel4Raw, { stiffness: 135, damping: 20, mass: 0.7 });
+  const statueY = useTransform(panel4Spring, [0, 1], ["92%", "42%"]);
+  const statueX = useTransform(panel4Spring, [0, 1], ["16%", "0%"]);
+  const statueRotate = useTransform(panel4Spring, [0, 1], [6, -25]);
+  const statueScale = useTransform(panel4Spring, [0, 1], [0.86, 1]);
+  const statueOpacity = useTransform(panel4Spring, [0, 0.25, 1], [0, 0.75, 1]);
+
+  const panel4Ref = useRef(null);
 
   const isGraphicTab = featuredIdx === PROJECTS.length;
   const featuredProject = PROJECTS[isGraphicTab ? 0 : featuredIdx];
@@ -246,6 +259,21 @@ export default function HomePage({ ready = true, onProgressChange, registerJumpH
         const max = maxScrollRef.current || 1;
         const progress = currentX.current / max;
 
+        // Drive Panel 04 statue pop-out smoothly as Page 04 enters viewport
+        if (panel4Ref.current) {
+          const p4Left = panel4Ref.current.offsetLeft;
+          const vw = window.innerWidth || 1;
+          const enterStart = p4Left - vw * 0.85;
+          const enterEnd = p4Left - vw * 0.04;
+          const p4Progress = Math.max(
+            0,
+            Math.min(1, (currentX.current - enterStart) / Math.max(1, enterEnd - enterStart))
+          );
+          panel4Raw.set(p4Progress);
+          const pointedNow = p4Progress > 0.78;
+          setEPointed((prev) => (prev === pointedNow ? prev : pointedNow));
+        }
+
         const chapter =
           progress < 0.16
             ? 0
@@ -278,7 +306,7 @@ export default function HomePage({ ready = true, onProgressChange, registerJumpH
       window.removeEventListener("keydown", handleKeyDown);
       cancelAnimationFrame(rafRef.current);
     };
-  }, [isDesktop, onProgressChange]);
+  }, [isDesktop, onProgressChange, panel4Raw]);
 
   const activeDisciplineObj =
     DISCIPLINES.find((d) => d.id === activeDiscipline) || DISCIPLINES[1];
@@ -551,8 +579,8 @@ export default function HomePage({ ready = true, onProgressChange, registerJumpH
           </div>
         </section>
 
-        {/* PANEL 04 — EXTREME WHITESPACE KINETIC WORDMARK */}
-        <section className="home-panel panel-wordmark" data-chapter="3">
+        {/* PANEL 04 — EXTREME WHITESPACE KINETIC WORDMARK + POP-OUT STATUE POINTING AT "E" */}
+        <section ref={panel4Ref} className="home-panel panel-wordmark" data-chapter="3">
           <div className="wordmark-inner">
             <div className="wordmark-top-row">
               <div className="section-index">04/</div>
@@ -567,17 +595,59 @@ export default function HomePage({ ready = true, onProgressChange, registerJumpH
               </div>
             </div>
 
-            <div className="kinetic-wordmark" aria-label="SELASI">
-              {"SELASI".split("").map((letter, idx) => (
-                <motion.span
-                  key={idx}
-                  className="kinetic-letter"
-                  whileHover={{ y: -26, rotate: idx % 2 === 0 ? -3 : 3, color: "#ff5d1f" }}
-                  transition={{ type: "spring", stiffness: 280, damping: 16 }}
+            <div className="kinetic-wordmark-stage">
+              {/* Statue hanging halfway out, popping out on scroll to point at the E of SELASI */}
+              {isDesktop ? (
+                <motion.div
+                  className="wordmark-statue-wrap"
+                  style={{
+                    x: statueX,
+                    y: statueY,
+                    rotate: statueRotate,
+                    scale: statueScale,
+                    opacity: statueOpacity,
+                  }}
+                  aria-hidden="true"
                 >
-                  {letter}
-                </motion.span>
-              ))}
+                  <img
+                    src={statueImg}
+                    alt=""
+                    className="wordmark-statue-img"
+                    draggable={false}
+                  />
+                </motion.div>
+              ) : (
+                <motion.div
+                  className="wordmark-statue-wrap"
+                  initial={{ x: "18%", y: "92%", rotate: 6, scale: 0.86, opacity: 0 }}
+                  whileInView={{ x: "0%", y: "44%", rotate: -25, scale: 1, opacity: 1 }}
+                  viewport={{ once: false, amount: 0.25 }}
+                  transition={{ type: "spring", stiffness: 120, damping: 18, mass: 0.7 }}
+                  onViewportEnter={() => setEPointed(true)}
+                  onViewportLeave={() => setEPointed(false)}
+                  aria-hidden="true"
+                >
+                  <img
+                    src={statueImg}
+                    alt=""
+                    className="wordmark-statue-img"
+                    draggable={false}
+                  />
+                </motion.div>
+              )}
+
+              <div className="kinetic-wordmark" aria-label="SELASI">
+                {"SELASI".split("").map((letter, idx) => (
+                  <motion.span
+                    key={idx}
+                    className={`kinetic-letter ${idx === 1 && ePointed ? "is-pointed" : ""}`}
+                    whileHover={{ y: -26, rotate: idx % 2 === 0 ? -3 : 3, color: "#ff5d1f" }}
+                    transition={{ type: "spring", stiffness: 280, damping: 16 }}
+                  >
+                    {letter}
+                  </motion.span>
+                ))}
+              </div>
             </div>
           </div>
         </section>
