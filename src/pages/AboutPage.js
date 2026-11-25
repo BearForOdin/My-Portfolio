@@ -1,4 +1,5 @@
 import React from "react";
+import { motion } from "framer-motion";
 import MagneticButton from "../components/Common/MagneticButton";
 import DarkOutro from "../components/Common/DarkOutro";
 import { BullseyeEmblem, SmileyEmblem } from "../components/Common/Emblems";
@@ -13,12 +14,35 @@ export default function AboutPage() {
         <section className="about-hero-section">
           <div className="section-index">01/</div>
           <h1 className="about-giant-name">
-            <span>SELASI</span>
-            <span>DZEAMESI</span>
+            <span className="fm-line-mask">
+              <motion.span
+                className="fm-line-inner"
+                initial={{ y: "105%" }}
+                animate={{ y: "0%" }}
+                transition={{ duration: 0.72, ease: [0.16, 1, 0.3, 1] }}
+              >
+                SELASI
+              </motion.span>
+            </span>
+            <span className="fm-line-mask">
+              <motion.span
+                className="fm-line-inner"
+                initial={{ y: "105%" }}
+                animate={{ y: "0%" }}
+                transition={{ duration: 0.72, delay: 0.08, ease: [0.16, 1, 0.3, 1] }}
+              >
+                DZEAMESI
+              </motion.span>
+            </span>
           </h1>
 
           <div className="about-bio-grid">
-            <div className="about-bio-left">
+            <motion.div
+              className="about-bio-left"
+              initial={{ opacity: 0, y: 20 }}
+              animate={{ opacity: 1, y: 0 }}
+              transition={{ duration: 0.65, delay: 0.16, ease: [0.16, 1, 0.3, 1] }}
+            >
               <div className="ed-eyebrow">HI THERE</div>
               <p className="about-bio-lead">
                 I&apos;m <strong>Selasi Dzeamesi</strong> — <strong>Founder &amp; CEO of KiruLabs</strong>,
@@ -39,15 +63,17 @@ export default function AboutPage() {
 
               <div className="about-cta-row">
                 <MagneticButton to="/resume" label="RESUME" className="ed-asymmetric-cta">
-                  View Resume / CV →
-                </MagneticButton>
-                <MagneticButton to="/works" label="WORKS" className="ed-asymmetric-cta ed-cta-subtle">
-                  Explore Works ↗
+                  View Resume / CV
                 </MagneticButton>
               </div>
-            </div>
+            </motion.div>
 
-            <div className="about-bio-right">
+            <motion.div
+              className="about-bio-right"
+              initial={{ opacity: 0, y: 24 }}
+              animate={{ opacity: 1, y: 0 }}
+              transition={{ duration: 0.72, delay: 0.22, ease: [0.16, 1, 0.3, 1] }}
+            >
               <div className="about-portrait-frame">
                 <img src={portraitImg} alt={PROFILE.fullName} className="about-portrait-img" />
                 <div className="about-portrait-emblems">
@@ -56,10 +82,10 @@ export default function AboutPage() {
                 </div>
               </div>
               <div className="about-photo-caption">
-                <span>Accra, Ghana — Creative Developer &amp; Artist</span>
+                <span>Accra, Ghana</span>
                 <span>&ldquo;Code. Commit. Everyday.&rdquo;</span>
               </div>
-            </div>
+            </motion.div>
           </div>
         </section>
 
@@ -71,15 +97,22 @@ export default function AboutPage() {
           </div>
 
           <div className="capabilities-grid">
-            {CAPABILITIES.map((group) => (
-              <div key={group.title} className="capability-col">
+            {CAPABILITIES.map((group, idx) => (
+              <motion.div
+                key={group.title}
+                className="capability-col"
+                initial={{ opacity: 0, y: 18 }}
+                whileInView={{ opacity: 1, y: 0 }}
+                viewport={{ once: true, amount: 0.2 }}
+                transition={{ duration: 0.55, delay: idx * 0.06, ease: [0.16, 1, 0.3, 1] }}
+              >
                 <h3 className="capability-heading">{group.title}</h3>
                 <ul className="capability-list">
                   {group.items.map((item) => (
                     <li key={item}>{item}</li>
                   ))}
                 </ul>
-              </div>
+              </motion.div>
             ))}
           </div>
         </section>
@@ -92,20 +125,27 @@ export default function AboutPage() {
           </div>
 
           <div className="edu-table">
-            {EDUCATION.map((item) => (
-              <div key={item.title} className="edu-row">
+            {EDUCATION.map((item, idx) => (
+              <motion.div
+                key={item.title}
+                className="edu-row"
+                initial={{ opacity: 0, y: 14 }}
+                whileInView={{ opacity: 1, y: 0 }}
+                viewport={{ once: true, amount: 0.2 }}
+                transition={{ duration: 0.5, delay: idx * 0.04, ease: [0.16, 1, 0.3, 1] }}
+              >
                 <div className="edu-period">{item.period}</div>
                 <div className="edu-main">
                   <h3>{item.title}</h3>
                   <span className="edu-org">{item.org}</span>
                 </div>
                 <p className="edu-detail">{item.detail}</p>
-              </div>
+              </motion.div>
             ))}
           </div>
         </section>
 
-        {/* 04/ BEYOND CODE */}
+        {/* 04/ INTERESTS (CLEAN BORDERLESS SWISS COLUMNS) */}
         <section className="about-section-block">
           <div className="ed-section-head">
             <div className="section-index">04/</div>
@@ -113,8 +153,15 @@ export default function AboutPage() {
           </div>
 
           <div className="interests-grid">
-            {INTERESTS.map((interest) => (
-              <div key={interest.index} className="interest-card">
+            {INTERESTS.map((interest, idx) => (
+              <motion.div
+                key={interest.index}
+                className="interest-col"
+                initial={{ opacity: 0, y: 18 }}
+                whileInView={{ opacity: 1, y: 0 }}
+                viewport={{ once: true, amount: 0.2 }}
+                transition={{ duration: 0.55, delay: idx * 0.08, ease: [0.16, 1, 0.3, 1] }}
+              >
                 <span className="interest-idx">{interest.index}/</span>
                 <h3>{interest.title}</h3>
                 <p>{interest.body}</p>
@@ -128,7 +175,7 @@ export default function AboutPage() {
                     {interest.link.label}
                   </a>
                 )}
-              </div>
+              </motion.div>
             ))}
           </div>
         </section>

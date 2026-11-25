@@ -7,6 +7,7 @@ import {
 } from "react-router-dom";
 import { TransitionProvider } from "./components/TransitionContext";
 import Preloader from "./components/Common/Preloader";
+import CustomCursor from "./components/Common/CustomCursor";
 import NavBar from "./components/Chrome/NavBar";
 import FooterBar from "./components/Chrome/FooterBar";
 import HomePage from "./pages/HomePage";
@@ -39,6 +40,7 @@ function AppShell() {
   return (
     <TransitionProvider>
       {!preloaderDone && <Preloader onComplete={() => setPreloaderDone(true)} />}
+      <CustomCursor />
       <div className="ed-app">
         <NavBar />
         <Routes>
@@ -46,6 +48,7 @@ function AppShell() {
             path="/"
             element={
               <HomePage
+                ready={preloaderDone}
                 onProgressChange={handleProgressChange}
                 registerJumpHandler={registerJumpHandler}
               />

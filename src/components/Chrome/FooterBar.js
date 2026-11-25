@@ -3,11 +3,11 @@ import { useLocation } from "react-router-dom";
 import { PROFILE } from "../../data/portfolioData";
 
 const CHAPTERS = [
-  { id: 0, label: "01", title: "Intro" },
-  { id: 1, label: "02", title: "Craft" },
-  { id: 2, label: "03", title: "Work" },
-  { id: 3, label: "04", title: "Mark" },
-  { id: 4, label: "05", title: "Chat" },
+  { id: 0, label: "01" },
+  { id: 1, label: "02" },
+  { id: 2, label: "03" },
+  { id: 3, label: "04" },
+  { id: 4, label: "05" },
 ];
 
 export default function FooterBar({ scrollProgress = 0, activeChapter = 0, onJumpChapter }) {
@@ -23,7 +23,7 @@ export default function FooterBar({ scrollProgress = 0, activeChapter = 0, onJum
         </div>
 
         {isHome && (
-          <div className="ed-footer-center" aria-label="Scroll progress and chapters">
+          <div className="ed-footer-center" aria-label="Scroll progress">
             <div className="ed-chapter-dots">
               {CHAPTERS.map((ch) => (
                 <button
@@ -31,7 +31,7 @@ export default function FooterBar({ scrollProgress = 0, activeChapter = 0, onJum
                   type="button"
                   className={`ed-chapter-dot ${activeChapter === ch.id ? "is-active" : ""}`}
                   onClick={() => onJumpChapter && onJumpChapter(ch.id)}
-                  title={`Jump to ${ch.label}/ ${ch.title}`}
+                  title={`Jump to ${ch.label}/`}
                 >
                   {ch.label}
                 </button>
@@ -40,14 +40,16 @@ export default function FooterBar({ scrollProgress = 0, activeChapter = 0, onJum
             <div className="ed-progress-track">
               <div
                 className="ed-progress-fill"
-                style={{ transform: `scaleX(${Math.max(0.04, Math.min(1, scrollProgress))})` }}
+                style={{ transform: `scaleX(${Math.max(0.03, Math.min(1, scrollProgress))})` }}
               />
             </div>
           </div>
         )}
 
         <div className="ed-footer-right">
-          <span>Design &amp; code by {PROFILE.firstName}</span>
+          <span className="ed-footer-credit">
+            Design &amp; code by {PROFILE.firstName}
+          </span>
         </div>
       </div>
     </footer>

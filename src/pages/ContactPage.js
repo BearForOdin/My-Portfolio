@@ -1,54 +1,73 @@
-import React, { useEffect, useState } from "react";
+import React from "react";
+import { motion } from "framer-motion";
 import { usePageTransition } from "../components/TransitionContext";
 import { PROFILE } from "../data/portfolioData";
 
 export default function ContactPage() {
-  const { copyText } = usePageTransition();
-  const [accraTime, setAccraTime] = useState("");
-
-  useEffect(() => {
-    const tick = () => {
-      try {
-        const formatted = new Intl.DateTimeFormat("en-GB", {
-          timeZone: PROFILE.timezone,
-          hour: "2-digit",
-          minute: "2-digit",
-          hour12: false,
-        }).format(new Date());
-        setAccraTime(`${formatted} GMT`);
-      } catch {
-        setAccraTime("GMT");
-      }
-    };
-    tick();
-    const id = setInterval(tick, 30000);
-    return () => clearInterval(id);
-  }, []);
+  const { copyText, setCursorVariant } = usePageTransition();
 
   return (
     <main className="contact-poster-page">
       <div className="contact-poster-grid">
-        {/* Left ~65%: Colossal Swiss Poster Display Words */}
+        {/* Left ~65%: Colossal Swiss Poster Words */}
         <div className="contact-poster-left">
-          <div className="poster-word poster-word-1">REACH</div>
+          <motion.div
+            className="poster-word poster-word-1"
+            initial={{ opacity: 0, x: -24 }}
+            animate={{ opacity: 1, x: 0 }}
+            transition={{ duration: 0.65, ease: [0.16, 1, 0.3, 1] }}
+          >
+            REACH
+          </motion.div>
 
           <div className="poster-row-2">
-            <div className="poster-word poster-word-2">TALK</div>
-            <div className="poster-note">
+            <motion.div
+              className="poster-word poster-word-2"
+              initial={{ opacity: 0, x: -24 }}
+              animate={{ opacity: 1, x: 0 }}
+              transition={{ duration: 0.65, delay: 0.08, ease: [0.16, 1, 0.3, 1] }}
+            >
+              TALK
+            </motion.div>
+            <motion.div
+              className="poster-note"
+              initial={{ opacity: 0, y: 12 }}
+              animate={{ opacity: 1, y: 0 }}
+              transition={{ duration: 0.6, delay: 0.24, ease: [0.16, 1, 0.3, 1] }}
+            >
               <span className="poster-note-eyebrow">GET IN TOUCH</span>
               <p>
-                Open to frontend roles, freelance collaborations, creative builds &amp; honest
-                conversations.
+                Open to new projects, collaborations, creative builds &amp; honest conversations.
               </p>
-            </div>
+            </motion.div>
           </div>
 
-          <div className="poster-word poster-word-3">BUILD</div>
-          <div className="poster-word poster-word-4">CONNECT</div>
+          <motion.div
+            className="poster-word poster-word-3"
+            initial={{ opacity: 0, x: -24 }}
+            animate={{ opacity: 1, x: 0 }}
+            transition={{ duration: 0.65, delay: 0.16, ease: [0.16, 1, 0.3, 1] }}
+          >
+            BUILD
+          </motion.div>
+
+          <motion.div
+            className="poster-word poster-word-4"
+            initial={{ opacity: 0, x: -24 }}
+            animate={{ opacity: 1, x: 0 }}
+            transition={{ duration: 0.65, delay: 0.24, ease: [0.16, 1, 0.3, 1] }}
+          >
+            CONNECT
+          </motion.div>
         </div>
 
-        {/* Right ~35%: Hairline Divided Contact Table */}
-        <aside className="contact-poster-right">
+        {/* Right ~35%: Hairline Divided Minimal Contact Table */}
+        <motion.aside
+          className="contact-poster-right"
+          initial={{ opacity: 0, y: 16 }}
+          animate={{ opacity: 1, y: 0 }}
+          transition={{ duration: 0.65, delay: 0.18, ease: [0.16, 1, 0.3, 1] }}
+        >
           <div className="contact-table">
             <div className="contact-row">
               <span className="contact-key">EMAIL</span>
@@ -56,10 +75,10 @@ export default function ContactPage() {
                 type="button"
                 className="contact-val contact-copy-btn"
                 onClick={() => copyText(PROFILE.email, "Email copied")}
-                title="Click to copy email"
+                onMouseEnter={() => setCursorVariant({ mode: "link", text: "" })}
+                onMouseLeave={() => setCursorVariant({ mode: "default", text: "" })}
               >
                 {PROFILE.email}
-                <span className="contact-copy-hint">COPY</span>
               </button>
             </div>
 
@@ -69,18 +88,16 @@ export default function ContactPage() {
                 type="button"
                 className="contact-val contact-copy-btn"
                 onClick={() => copyText(PROFILE.phone, "Phone copied")}
-                title="Click to copy phone"
+                onMouseEnter={() => setCursorVariant({ mode: "link", text: "" })}
+                onMouseLeave={() => setCursorVariant({ mode: "default", text: "" })}
               >
                 {PROFILE.phone}
-                <span className="contact-copy-hint">COPY</span>
               </button>
             </div>
 
             <div className="contact-row">
               <span className="contact-key">BASED</span>
-              <span className="contact-val">
-                {PROFILE.location} <span className="contact-time">({accraTime})</span>
-              </span>
+              <span className="contact-val">{PROFILE.location}</span>
             </div>
 
             <div className="contact-socials-list">
@@ -96,12 +113,9 @@ export default function ContactPage() {
               <a href={PROFILE.socials.twitter} target="_blank" rel="noopener noreferrer">
                 X / TWITTER <span>↗</span>
               </a>
-              <a href={PROFILE.socials.instagram} target="_blank" rel="noopener noreferrer">
-                INSTAGRAM <span>↗</span>
-              </a>
             </div>
           </div>
-        </aside>
+        </motion.aside>
 
         {/* Far-right vertical availability strip */}
         <div className="contact-vertical-status" aria-label={PROFILE.availability}>

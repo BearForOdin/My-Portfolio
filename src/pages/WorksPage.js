@@ -1,5 +1,6 @@
 import React, { useState, useEffect } from "react";
-import { TransitionLink } from "../components/TransitionContext";
+import { motion, AnimatePresence, useMotionValue, useSpring } from "framer-motion";
+import { TransitionLink, usePageTransition } from "../components/TransitionContext";
 import DarkOutro from "../components/Common/DarkOutro";
 import ProjectVisual from "../components/Common/ProjectVisual";
 import { PROJECTS, GRAPHIC_WORKS } from "../data/portfolioData";
@@ -7,10 +8,15 @@ import { PROJECTS, GRAPHIC_WORKS } from "../data/portfolioData";
 const FILTERS = ["All", "Web", "Web3", "Graphic Design"];
 
 export default function WorksPage() {
+  const { setCursorVariant } = usePageTransition();
   const [activeFilter, setActiveFilter] = useState("All");
   const [hoveredSlug, setHoveredSlug] = useState(null);
-  const [cursor, setCursor] = useState({ x: 0, y: 0 });
   const [lightboxIdx, setLightboxIdx] = useState(null);
+
+  const previewX = useMotionValue(0);
+  const previewY = useMotionValue(0);
+  const springPreviewX = useSpring(previewX, { stiffness: 320, damping: 28 });
+  const springPreviewY = useSpring(previewY, { stiffness: 320, damping: 28 });
 
   const showSoftware = activeFilter !== "Graphic Design";
   const showDesign = activeFilter === "All" || activeFilter === "Graphic Design";
@@ -36,7 +42,8 @@ export default function WorksPage() {
   }, [lightboxIdx]);
 
   const handleMouseMove = (e) => {
-    setCursor({ x: e.clientX, y: e.clientY });
+    previewX.set(e.clientX + 28);
+    previewY.set(e.clientY - 110);
   };
 
   const activeArtwork = lightboxIdx !== null ? GRAPHIC_WORKS[lightboxIdx] : null;
@@ -45,20 +52,25 @@ export default function WorksPage() {
     <main className="ed-page" onMouseMove={handleMouseMove}>
       <div className="ed-container ed-page-top">
         {/* Header */}
-        <div className="ed-section-head">
+        <motion.div
+          className="ed-section-head"
+          initial={{ opacity: 0, y: 24 }}
+          animate={{ opacity: 1, y: 0 }}
+          transition={{ duration: 0.65, ease: [0.16, 1, 0.3, 1] }}
+        >
           <div className="section-index">01/</div>
           <div className="ed-title-with-count">
-            <h1 className="ed-page-title">SELECTED WORKS</h1>
+            <h1 className="ed-page-title">PROJECTS</h1>
             <sup className="ed-count">0{PROJECTS.length + GRAPHIC_WORKS.length}</sup>
           </div>
-        </div>
+        </motion.div>
 
         <div className="ed-overview-grid">
           <div className="ed-eyebrow">OVERVIEW</div>
           <div className="ed-overview-right">
             <p className="ed-lead-copy">
-              Production web applications, decentralized Web3 builds, and bold graphic design &amp;
-              art direction — bridging engineering precision with visual culture.
+              Selected software products, Web3 experiments, and graphic design works — built with
+              clarity, restraint, and visual craft.
             </p>
             <div className="ed-filter-row" role="tablist" aria-label="Filter works">
               {FILTERS.map((f) => (
@@ -67,7 +79,7 @@ export default function WorksPage() {
                   type="button"
                   role="tab"
                   aria-selected={activeFilter === f}
-                  className={`ed-filter-pill ${activeFilter === f ? "is-active" : ""}`}
+                  className={`ed-filter-minimal ${activeFilter === f ? "is-active" : ""}`}
                   onClick={() => setActiveFilter(f)}
                 >
                   {f}
@@ -79,16 +91,27 @@ export default function WorksPage() {
 
         {/* 01/ SOFTWARE PROJECTS */}
         {showSoftware && (
-          <>
-            <div className="works-index-list">
-              {filteredProjects.map((project) => (
+          <div className="works-index-list">
+            {filteredProjects.map((project, idx) => (
+              <motion.div
+                key={project.slug}
+                initial={{ opacity: 0, y: 18 }}
+                whileInView={{ opacity: 1, y: 0 }}
+                viewport={{ once: true, amount: 0.2 }}
+                transition={{ duration: 0.5, delay: idx * 0.06, ease: [0.16, 1, 0.3, 1] }}
+              >
                 <TransitionLink
-                  key={project.slug}
                   to={`/works/${project.slug}`}
                   label={project.title.toUpperCase()}
                   className="works-row"
-                  onMouseEnter={() => setHoveredSlug(project.slug)}
-                  onMouseLeave={() => setHoveredSlug(null)}
+                  onMouseEnter={() => {
+                    setHoveredSlug(project.slug);
+                    setCursorVariant({ mode: "media", text: "VIEW" });
+                  }}
+                  onMouseLeave={() => {
+                    setHoveredSlug(null);
+                    setCursorVariant({ mode: "default", text: "" });
+                  }}
                 >
                   <div className="works-row-index">
                     {project.index} / 0{PROJECTS.length}
@@ -98,28 +121,25 @@ export default function WorksPage() {
                     <p className="works-row-tagline">{project.tagline}</p>
                   </div>
                   <div className="works-row-meta">
-                    {project.liveUrl && (
-                      <span className="works-live-badge">● LIVE</span>
-                    )}
-                    <span className="works-row-cat">{project.category}</span>
+                    <span className="works-row-plain">{project.category}</span>
                     <span className="works-row-year">{project.year}</span>
                     <span className="works-row-arrow" aria-hidden="true">
                       ↗
                     </span>
                   </div>
                 </TransitionLink>
-              ))}
-            </div>
-          </>
+              </motion.div>
+            ))}
+          </div>
         )}
 
-        {/* 02/ GRAPHIC DESIGN & ART DIRECTION */}
+        {/* 02/ GRAPHIC DESIGN & ART DIRECTION (RAW BORDERLESS PLATES) */}
         {showDesign && (
           <section id="design" className="design-showcase-section">
             <div className="ed-section-head ed-section-head-spaced">
               <div className="section-index">02/</div>
               <div className="ed-title-with-count">
-                <h2 className="ed-page-title ed-page-title-sm">GRAPHIC DESIGN &amp; ART</h2>
+                <h2 className="ed-page-title ed-page-title-sm">GRAPHIC DESIGN</h2>
                 <sup className="ed-count">0{GRAPHIC_WORKS.length}</sup>
               </div>
             </div>
@@ -127,110 +147,140 @@ export default function WorksPage() {
             <div className="ed-overview-grid">
               <div className="ed-eyebrow">VISUAL STUDIO</div>
               <p className="ed-lead-copy">
-                Posters, streetwear apparel direction, editorial lookbooks, and halftone illustrations
-                crafted under KiruLabs &amp; personal visual explorations. Click any piece to inspect
-                full-screen.
+                Posters, streetwear apparel, fashion lookbooks, and halftone illustrations crafted
+                under KiruLabs &amp; personal explorations.
               </p>
             </div>
 
             <div className="design-gallery-grid">
               {GRAPHIC_WORKS.map((art, idx) => (
-                <button
+                <motion.button
                   key={art.id}
                   type="button"
-                  className={`design-art-card ${idx === 0 || idx === 1 ? "is-featured" : ""}`}
+                  className={`design-art-plate ${idx === 0 || idx === 1 ? "is-featured" : ""}`}
                   onClick={() => setLightboxIdx(idx)}
+                  onMouseEnter={() => setCursorVariant({ mode: "media", text: "OPEN" })}
+                  onMouseLeave={() => setCursorVariant({ mode: "default", text: "" })}
+                  initial={{ opacity: 0, y: 24 }}
+                  whileInView={{ opacity: 1, y: 0 }}
+                  viewport={{ once: true, amount: 0.15 }}
+                  transition={{ duration: 0.6, delay: (idx % 3) * 0.07, ease: [0.16, 1, 0.3, 1] }}
                 >
                   <div className="design-art-media">
                     <img src={art.image} alt={art.title} loading="lazy" />
-                    <div className="design-art-hover">
-                      <span>VIEW FULLSCREEN ↗</span>
-                    </div>
                   </div>
                   <div className="design-art-meta">
                     <div className="design-art-head">
-                      <span className="design-art-idx">{art.index} / 0{GRAPHIC_WORKS.length}</span>
+                      <span className="design-art-idx">
+                        {art.index} / 0{GRAPHIC_WORKS.length}
+                      </span>
                       <span className="design-art-year">{art.year}</span>
                     </div>
                     <h3 className="design-art-title">{art.title}</h3>
                     <span className="design-art-cat">{art.category}</span>
                   </div>
-                </button>
+                </motion.button>
               ))}
             </div>
           </section>
         )}
       </div>
 
-      {/* Floating Hover Preview (Desktop Software Rows) */}
-      {hoveredSlug && (
-        <div
-          className="works-floating-preview"
-          style={{
-            transform: `translate3d(${cursor.x + 28}px, ${cursor.y - 110}px, 0)`,
-          }}
-          aria-hidden="true"
-        >
-          <ProjectVisual slug={hoveredSlug} compact />
-        </div>
-      )}
+      {/* Framer Motion Spring Floating Preview */}
+      <AnimatePresence>
+        {hoveredSlug && (
+          <motion.div
+            className="works-floating-preview"
+            style={{ x: springPreviewX, y: springPreviewY }}
+            initial={{ opacity: 0, scale: 0.92 }}
+            animate={{ opacity: 1, scale: 1 }}
+            exit={{ opacity: 0, scale: 0.92 }}
+            transition={{ duration: 0.24, ease: [0.16, 1, 0.3, 1] }}
+            aria-hidden="true"
+          >
+            <ProjectVisual slug={hoveredSlug} compact />
+          </motion.div>
+        )}
+      </AnimatePresence>
 
-      {/* Fullscreen Lightbox Modal for Graphic Design Works */}
-      {activeArtwork && (
-        <div
-          className="art-lightbox"
-          role="dialog"
-          aria-modal="true"
-          aria-label={activeArtwork.title}
-          onClick={() => setLightboxIdx(null)}
-        >
-          <div className="art-lightbox-panel" onClick={(e) => e.stopPropagation()}>
-            <div className="art-lightbox-topbar">
-              <span className="art-lightbox-idx">
-                {activeArtwork.index} / 0{GRAPHIC_WORKS.length} — {activeArtwork.category.toUpperCase()}
-              </span>
-              <button
-                type="button"
-                className="art-lightbox-close"
-                onClick={() => setLightboxIdx(null)}
-              >
-                CLOSE [ESC]
-              </button>
-            </div>
-
-            <div className="art-lightbox-body">
-              <div className="art-lightbox-img-wrap">
-                <img src={activeArtwork.image} alt={activeArtwork.title} />
+      {/* Framer Motion Fullscreen Lightbox */}
+      <AnimatePresence>
+        {activeArtwork && (
+          <motion.div
+            className="art-lightbox"
+            role="dialog"
+            aria-modal="true"
+            aria-label={activeArtwork.title}
+            initial={{ opacity: 0 }}
+            animate={{ opacity: 1 }}
+            exit={{ opacity: 0 }}
+            transition={{ duration: 0.28 }}
+            onClick={() => setLightboxIdx(null)}
+          >
+            <motion.div
+              className="art-lightbox-panel"
+              initial={{ opacity: 0, y: 24, scale: 0.97 }}
+              animate={{ opacity: 1, y: 0, scale: 1 }}
+              exit={{ opacity: 0, y: 16, scale: 0.97 }}
+              transition={{ duration: 0.36, ease: [0.16, 1, 0.3, 1] }}
+              onClick={(e) => e.stopPropagation()}
+            >
+              <div className="art-lightbox-topbar">
+                <span className="art-lightbox-idx">
+                  {activeArtwork.index} / 0{GRAPHIC_WORKS.length} — {activeArtwork.category.toUpperCase()}
+                </span>
+                <button
+                  type="button"
+                  className="art-lightbox-close"
+                  onClick={() => setLightboxIdx(null)}
+                >
+                  CLOSE [ESC]
+                </button>
               </div>
-              <div className="art-lightbox-info">
-                <span className="art-lightbox-client">{activeArtwork.client} · {activeArtwork.year}</span>
-                <h3>{activeArtwork.title}</h3>
-                <p>{activeArtwork.description}</p>
-                <div className="art-lightbox-nav">
-                  <button
-                    type="button"
-                    className="ed-dark-pill"
-                    onClick={() =>
-                      setLightboxIdx((i) => (i - 1 + GRAPHIC_WORKS.length) % GRAPHIC_WORKS.length)
-                    }
-                  >
-                    ← Prev
-                  </button>
-                  <button
-                    type="button"
-                    className="ed-dark-pill"
-                    onClick={() =>
-                      setLightboxIdx((i) => (i + 1) % GRAPHIC_WORKS.length)
-                    }
-                  >
-                    Next →
-                  </button>
+
+              <div className="art-lightbox-body">
+                <div className="art-lightbox-img-wrap">
+                  <motion.img
+                    key={activeArtwork.id}
+                    src={activeArtwork.image}
+                    alt={activeArtwork.title}
+                    initial={{ opacity: 0, scale: 0.98 }}
+                    animate={{ opacity: 1, scale: 1 }}
+                    transition={{ duration: 0.3 }}
+                  />
+                </div>
+                <div className="art-lightbox-info">
+                  <span className="art-lightbox-client">
+                    {activeArtwork.client} · {activeArtwork.year}
+                  </span>
+                  <h3>{activeArtwork.title}</h3>
+                  <p>{activeArtwork.description}</p>
+                  <div className="art-lightbox-nav">
+                    <button
+                      type="button"
+                      className="ed-dark-pill ed-pill-compact"
+                      onClick={() =>
+                        setLightboxIdx((i) => (i - 1 + GRAPHIC_WORKS.length) % GRAPHIC_WORKS.length)
+                      }
+                    >
+                      ← Prev
+                    </button>
+                    <button
+                      type="button"
+                      className="ed-dark-pill ed-pill-compact"
+                      onClick={() =>
+                        setLightboxIdx((i) => (i + 1) % GRAPHIC_WORKS.length)
+                      }
+                    >
+                      Next →
+                    </button>
+                  </div>
                 </div>
               </div>
-            </div>
-          </div>
-        </div>
-      )}
+            </motion.div>
+          </motion.div>
+        )}
+      </AnimatePresence>
 
       <DarkOutro />
     </main>

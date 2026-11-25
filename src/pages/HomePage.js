@@ -1,5 +1,6 @@
 import React, { useEffect, useRef, useState, useCallback } from "react";
-import { TransitionLink } from "../components/TransitionContext";
+import { motion, AnimatePresence } from "framer-motion";
+import { TransitionLink, usePageTransition } from "../components/TransitionContext";
 import MagneticButton from "../components/Common/MagneticButton";
 import DarkOutro from "../components/Common/DarkOutro";
 import ProjectVisual from "../components/Common/ProjectVisual";
@@ -9,9 +10,28 @@ import portraitImg from "../Assets/profhead.png";
 
 const TRAIL_COUNT = 8;
 
+function MaskedLine({ children, ready, delay = 0 }) {
+  return (
+    <span className="fm-line-mask">
+      <motion.span
+        className="fm-line-inner"
+        initial={{ y: "110%" }}
+        animate={ready ? { y: "0%" } : { y: "110%" }}
+        transition={{
+          duration: 0.78,
+          delay,
+          ease: [0.16, 1, 0.3, 1],
+        }}
+      >
+        {children}
+      </motion.span>
+    </span>
+  );
+}
+
 function DraggablePortrait() {
+  const { setCursorVariant } = usePageTransition();
   const [dragging, setDragging] = useState(false);
-  const [hasDragged, setHasDragged] = useState(false);
   const targetRef = useRef({ x: 0, y: 0 });
   const startRef = useRef({ x: 0, y: 0 });
   const trailRefs = useRef(
@@ -21,13 +41,11 @@ function DraggablePortrait() {
   const rafRef = useRef(null);
 
   useEffect(() => {
-    const animate = () => {
+    const animateTrail = () => {
       const nodes = trailRefs.current;
-      // Head eases toward target
-      nodes[0].x += (targetRef.current.x - nodes[0].x) * 0.24;
-      nodes[0].y += (targetRef.current.y - nodes[0].y) * 0.24;
+      nodes[0].x += (targetRef.current.x - nodes[0].x) * 0.22;
+      nodes[0].y += (targetRef.current.y - nodes[0].y) * 0.22;
 
-      // Trailing clones chase previous clone
       for (let i = 1; i < TRAIL_COUNT; i++) {
         nodes[i].x += (nodes[i - 1].x - nodes[i].x) * 0.28;
         nodes[i].y += (nodes[i - 1].y - nodes[i].y) * 0.28;
@@ -41,17 +59,16 @@ function DraggablePortrait() {
         }
       }
 
-      rafRef.current = requestAnimationFrame(animate);
+      rafRef.current = requestAnimationFrame(animateTrail);
     };
 
-    rafRef.current = requestAnimationFrame(animate);
+    rafRef.current = requestAnimationFrame(animateTrail);
     return () => cancelAnimationFrame(rafRef.current);
   }, []);
 
   const handlePointerDown = (e) => {
     e.currentTarget.setPointerCapture(e.pointerId);
     setDragging(true);
-    setHasDragged(true);
     startRef.current = {
       x: e.clientX - targetRef.current.x,
       y: e.clientY - targetRef.current.y,
@@ -60,8 +77,8 @@ function DraggablePortrait() {
 
   const handlePointerMove = (e) => {
     if (!dragging) return;
-    const dx = Math.max(-220, Math.min(220, e.clientX - startRef.current.x));
-    const dy = Math.max(-140, Math.min(140, e.clientY - startRef.current.y));
+    const dx = Math.max(-240, Math.min(240, e.clientX - startRef.current.x));
+    const dy = Math.max(-150, Math.min(150, e.clientY - startRef.current.y));
     targetRef.current = { x: dx, y: dy };
   };
 
@@ -74,10 +91,13 @@ function DraggablePortrait() {
     <div className="hero-portrait-wrap">
       <div className="hero-drag-label">
         DR<span className="accent">A</span>G ME
-        {!hasDragged && <span className="hero-drag-hint"> · HOLD &amp; PULL</span>}
       </div>
 
-      <div className={`hero-portrait-stage ${dragging ? "is-dragging" : ""}`}>
+      <div
+        className={`hero-portrait-stage ${dragging ? "is-dragging" : ""}`}
+        onMouseEnter={() => setCursorVariant({ mode: "media", text: "DRAG" })}
+        onMouseLeave={() => setCursorVariant({ mode: "default", text: "" })}
+      >
         {Array.from({ length: TRAIL_COUNT })
           .map((_, idx) => TRAIL_COUNT - 1 - idx)
           .map((i) => (
@@ -88,7 +108,7 @@ function DraggablePortrait() {
               }}
               className={`hero-portrait-card ${i === 0 ? "is-lead" : "is-trail"}`}
               style={{
-                opacity: i === 0 ? 1 : Math.max(0.08, 0.55 - i * 0.07),
+                opacity: i === 0 ? 1 : Math.max(0.08, 0.52 - i * 0.065),
                 zIndex: TRAIL_COUNT - i,
               }}
               onPointerDown={i === 0 ? handlePointerDown : undefined}
@@ -102,12 +122,6 @@ function DraggablePortrait() {
                 draggable={false}
                 className="hero-portrait-img"
               />
-              {i === 0 && (
-                <div className="hero-portrait-caption">
-                  <span>SELASI // ACCRA</span>
-                  <span>ART + CODE</span>
-                </div>
-              )}
             </div>
           ))}
       </div>
@@ -115,30 +129,8 @@ function DraggablePortrait() {
   );
 }
 
-function useAccraClock() {
-  const [time, setTime] = useState("");
-  useEffect(() => {
-    const update = () => {
-      try {
-        const formatted = new Intl.DateTimeFormat("en-GB", {
-          timeZone: PROFILE.timezone,
-          hour: "2-digit",
-          minute: "2-digit",
-          hour12: false,
-        }).format(new Date());
-        setTime(`${formatted} GMT`);
-      } catch {
-        setTime("GMT");
-      }
-    };
-    update();
-    const id = setInterval(update, 30000);
-    return () => clearInterval(id);
-  }, []);
-  return time;
-}
-
-export default function HomePage({ onProgressChange, registerJumpHandler }) {
+export default function HomePage({ ready = true, onProgressChange, registerJumpHandler }) {
+  const { setCursorVariant } = usePageTransition();
   const trackRef = useRef(null);
   const currentX = useRef(0);
   const targetX = useRef(0);
@@ -151,11 +143,9 @@ export default function HomePage({ onProgressChange, registerJumpHandler }) {
   const [activeDiscipline, setActiveDiscipline] = useState("frontend");
   const [featuredIdx, setFeaturedIdx] = useState(0);
 
-  const accraTime = useAccraClock();
   const isGraphicTab = featuredIdx === PROJECTS.length;
   const featuredProject = PROJECTS[isGraphicTab ? 0 : featuredIdx];
 
-  // Resize listener for desktop horizontal vs mobile vertical mode
   useEffect(() => {
     const handleResize = () => {
       const desktop = window.innerWidth >= 1024;
@@ -198,7 +188,7 @@ export default function HomePage({ onProgressChange, registerJumpHandler }) {
     }
   }, [registerJumpHandler, jumpToChapter]);
 
-  // Smooth wheel-to-horizontal scroll loop on desktop
+  // Silky Lenis-like horizontal smooth scroll on desktop
   useEffect(() => {
     if (!isDesktop) {
       if (onProgressChange) onProgressChange(0, 0);
@@ -221,7 +211,7 @@ export default function HomePage({ onProgressChange, registerJumpHandler }) {
       const delta = Math.abs(e.deltaY) >= Math.abs(e.deltaX) ? e.deltaY : e.deltaX;
       targetX.current = Math.max(
         0,
-        Math.min(maxScrollRef.current, targetX.current + delta * 1.15)
+        Math.min(maxScrollRef.current, targetX.current + delta * 1.1)
       );
     };
 
@@ -245,7 +235,7 @@ export default function HomePage({ onProgressChange, registerJumpHandler }) {
     let lastChapter = -1;
 
     const tick = () => {
-      currentX.current += (targetX.current - currentX.current) * 0.095;
+      currentX.current += (targetX.current - currentX.current) * 0.088;
       if (Math.abs(targetX.current - currentX.current) < 0.2) {
         currentX.current = targetX.current;
       }
@@ -256,7 +246,6 @@ export default function HomePage({ onProgressChange, registerJumpHandler }) {
         const max = maxScrollRef.current || 1;
         const progress = currentX.current / max;
 
-        // Determine active chapter (0..4)
         const chapter =
           progress < 0.16
             ? 0
@@ -297,48 +286,60 @@ export default function HomePage({ onProgressChange, registerJumpHandler }) {
   return (
     <main className={`home-viewport ${isDesktop ? "is-horizontal" : "is-vertical"}`}>
       <div ref={trackRef} className="home-track">
-        {/* PANEL 01 — INTRO HERO */}
+        {/* PANEL 01 — RADICAL SIMPLICITY HERO */}
         <section className="home-panel panel-intro" data-chapter="0">
           <div className="panel-intro-grid">
-            {/* Top Left */}
-            <div className="intro-top-left">
+            <motion.div
+              className="intro-top-left"
+              initial={{ opacity: 0, y: 12 }}
+              animate={ready ? { opacity: 1, y: 0 } : { opacity: 0, y: 12 }}
+              transition={{ duration: 0.6, delay: 0.12, ease: [0.16, 1, 0.3, 1] }}
+            >
               <div className="section-index">01/</div>
               <div className="intro-origin">
                 <strong>From Accra with Love</strong>
-                <span className="intro-clock">ACC · {accraTime}</span>
               </div>
-            </div>
+            </motion.div>
 
-            {/* Top Right — Title stays "Creative Developer." */}
+            {/* Title stays "Creative Developer." */}
             <div className="intro-top-right">
               <h1 className="hero-display hero-display-right">
-                <span>CREATIVE</span>
-                <span>
+                <MaskedLine ready={ready} delay={0.04}>
+                  CREATIVE
+                </MaskedLine>
+                <MaskedLine ready={ready} delay={0.12}>
                   DEVELOPER<span className="accent">.</span>
-                </span>
+                </MaskedLine>
               </h1>
             </div>
 
-            {/* Bottom Left — Monumental Name */}
             <div className="intro-bottom-left">
               <div className="hero-display hero-display-left" aria-label={PROFILE.fullName}>
-                <span>SELASI</span>
-                <span>DZEAMESI</span>
+                <MaskedLine ready={ready} delay={0.18}>
+                  SELASI
+                </MaskedLine>
+                <MaskedLine ready={ready} delay={0.26}>
+                  DZEAMESI
+                </MaskedLine>
               </div>
             </div>
 
-            {/* Mid/Bottom Right — Draggable Portrait Trail + Bio */}
-            <div className="intro-bottom-right">
+            <motion.div
+              className="intro-bottom-right"
+              initial={{ opacity: 0, y: 20 }}
+              animate={ready ? { opacity: 1, y: 0 } : { opacity: 0, y: 20 }}
+              transition={{ duration: 0.72, delay: 0.22, ease: [0.16, 1, 0.3, 1] }}
+            >
               <DraggablePortrait />
               <div className="intro-bio-row">
                 <span className="intro-arrow" aria-hidden="true">
                   →
                 </span>
                 <p className="intro-bio-text">
-                  FOUNDER &amp; CEO OF KIRULABS — BASED IN ACCRA, GHANA. BLENDING SOFTWARE ENGINEERING, GRAPHIC ART &amp; LEADERSHIP.
+                  FOUNDER &amp; CEO OF KIRULABS, BASED IN ACCRA — PASSIONATE IN SOFTWARE &amp; VISUAL ART.
                 </p>
               </div>
-            </div>
+            </motion.div>
           </div>
         </section>
 
@@ -348,43 +349,70 @@ export default function HomePage({ onProgressChange, registerJumpHandler }) {
             <div className="craft-left">
               <div className="section-index">02/</div>
               <p className="craft-statement">
-                I CRAFT INTERFACES &amp; SYSTEMS{" "}
+                I BUILD DIGITAL PRODUCTS{" "}
                 <span className="craft-rule" aria-hidden="true" />{" "}
-                WHERE VISUAL ART MEETS ENGINEERING.
+                &amp; VISUAL WORLDS THAT OWN THE SPACE.
               </p>
               <div className="craft-emblems">
                 <BullseyeEmblem />
-                <SmileyEmblem />
+                <motion.div
+                  whileHover={{ rotate: 38, scale: 1.07 }}
+                  transition={{ type: "spring", stiffness: 220, damping: 14 }}
+                >
+                  <SmileyEmblem />
+                </motion.div>
               </div>
             </div>
 
             <div className="craft-right">
               <div className="discipline-stack" role="list">
                 {DISCIPLINES.map((d) => (
-                  <div
+                  <motion.div
                     key={d.id}
                     role="listitem"
                     className={`discipline-word ${
                       activeDiscipline === d.id ? "is-highlighted" : ""
                     }`}
                     onMouseEnter={() => setActiveDiscipline(d.id)}
+                    animate={{
+                      x: activeDiscipline === d.id ? -14 : 0,
+                    }}
+                    transition={{ type: "spring", stiffness: 280, damping: 24 }}
                   >
                     {d.label}
-                  </div>
+                  </motion.div>
                 ))}
               </div>
 
               <div className="craft-footer-row">
-                <p className="discipline-caption">{activeDisciplineObj.caption}</p>
-                <MagneticButton to="/about" label="ABOUT" className="ed-asymmetric-cta">
-                  More About Me →
+                <AnimatePresence exitBeforeEnter>
+                  <motion.p
+                    key={activeDisciplineObj.id}
+                    className="discipline-caption"
+                    initial={{ opacity: 0, y: 6 }}
+                    animate={{ opacity: 1, y: 0 }}
+                    exit={{ opacity: 0, y: -6 }}
+                    transition={{ duration: 0.22 }}
+                  >
+                    {activeDisciplineObj.caption}
+                  </motion.p>
+                </AnimatePresence>
+
+                <MagneticButton
+                  to="/about"
+                  label="ABOUT"
+                  className="ed-asymmetric-cta"
+                  onMouseEnter={() => setCursorVariant({ mode: "link", text: "" })}
+                  onMouseLeave={() => setCursorVariant({ mode: "default", text: "" })}
+                >
+                  More About Me
                 </MagneticButton>
               </div>
             </div>
           </div>
         </section>
 
-        {/* PANEL 03 — FEATURED WORK SHOWCASE */}
+        {/* PANEL 03 — FEATURED WORK SHOWCASE (ULTRA-CLEAN) */}
         <section className="home-panel panel-work" data-chapter="2">
           <div className="panel-work-layout">
             <div className="work-left-emblem">
@@ -392,153 +420,174 @@ export default function HomePage({ onProgressChange, registerJumpHandler }) {
             </div>
 
             <div className="work-stage">
-              {/* Quick switch between featured software & graphic design */}
+              {/* Minimalist hairline text tabs (no bulky pill boxes) */}
               <div className="work-switch-bar">
                 <div className="work-switch-tabs">
                   {PROJECTS.map((proj, idx) => (
                     <button
                       key={proj.slug}
                       type="button"
-                      className={`work-switch-pill ${featuredIdx === idx ? "is-active" : ""}`}
+                      className={`work-switch-minimal ${featuredIdx === idx ? "is-active" : ""}`}
                       onClick={() => setFeaturedIdx(idx)}
+                      onMouseEnter={() => setCursorVariant({ mode: "link", text: "" })}
+                      onMouseLeave={() => setCursorVariant({ mode: "default", text: "" })}
                     >
-                      <span>{proj.index}</span> {proj.shortTitle}
+                      <span className="wsm-num">{proj.index}</span>
+                      <span>{proj.shortTitle}</span>
                     </button>
                   ))}
                   <button
                     type="button"
-                    className={`work-switch-pill ${isGraphicTab ? "is-active" : ""}`}
+                    className={`work-switch-minimal ${isGraphicTab ? "is-active" : ""}`}
                     onClick={() => setFeaturedIdx(PROJECTS.length)}
+                    onMouseEnter={() => setCursorVariant({ mode: "link", text: "" })}
+                    onMouseLeave={() => setCursorVariant({ mode: "default", text: "" })}
                   >
-                    <span>04</span> Graphic Art
+                    <span className="wsm-num">04</span>
+                    <span>Graphic Art</span>
                   </button>
                 </div>
-                <TransitionLink to="/works" label="WORKS" className="work-all-link">
-                  View All Works →
-                </TransitionLink>
-              </div>
 
-              {/* Dual visual cards (UI preview + Code snippet / Art Direction card) */}
-              <div className="work-cards-row">
                 <TransitionLink
-                  to={isGraphicTab ? "/works" : `/works/${featuredProject.slug}`}
-                  label={isGraphicTab ? "GRAPHIC DESIGN" : featuredProject.title.toUpperCase()}
-                  className="work-primary-card"
+                  to="/works"
+                  label="WORK"
+                  className="work-all-link"
+                  onMouseEnter={() => setCursorVariant({ mode: "link", text: "" })}
+                  onMouseLeave={() => setCursorVariant({ mode: "default", text: "" })}
                 >
-                  <ProjectVisual slug={isGraphicTab ? "graphic-showcase" : featuredProject.slug} />
+                  All Works →
                 </TransitionLink>
-
-                <div className="work-code-card">
-                  <div className="work-code-header">
-                    <span className="code-dots">
-                      <i />
-                      <i />
-                      <i />
-                    </span>
-                    <span>
-                      {isGraphicTab ? "kirulabs-studio.art" : `${featuredProject.slug}.spec`}
-                    </span>
-                  </div>
-                  <pre className="work-code-pre">
-                    <code>
-                      {isGraphicTab
-                        ? `// Visual Art & Graphic Design\nconst archive = {\n  studio: "KiruLabs",\n  works: [\n    "KiruLabs — May Day Campaign",\n    "ACCA 35° — Anniversary Poster",\n    "KOKONSAH — Streetwear Jersey",\n    "Y2K Baddie — Editorial",\n    "Third Eye — Halftone Print"\n  ]\n};`
-                        : featuredProject.codePreview}
-                    </code>
-                  </pre>
-                  <div className="work-code-tags">
-                    {(isGraphicTab
-                      ? ["Posters", "Apparel", "Lookbooks", "Print"]
-                      : featuredProject.stack
-                    ).map((tech) => (
-                      <span key={tech} className="work-tech-tag">
-                        {tech}
-                      </span>
-                    ))}
-                  </div>
-                </div>
               </div>
 
-              {/* Metadata caption bar */}
-              <div className="work-meta-strip">
-                <span className="work-meta-muted">
-                  — {isGraphicTab ? "Visual Direction & Posters · 05 Pieces" : `${featuredProject.category} · Built by Selasi Dzeamesi`}
-                </span>
-                <span className="work-meta-strong">
-                  {isGraphicTab
-                    ? "2025–2026    Art Director & Designer"
-                    : `${featuredProject.year}    ${featuredProject.role}`}
-                </span>
-              </div>
-
-              {/* Bottom Editorial Row */}
-              <div className="work-editorial-bottom">
-                <div className="section-index section-index-lg">03/</div>
-                <div className="work-editorial-title">
-                  <h3>{isGraphicTab ? "Graphic Design Archive" : featuredProject.title}</h3>
-                  <div className="work-case-links">
+              {/* Animated Showcase Transition */}
+              <AnimatePresence exitBeforeEnter>
+                <motion.div
+                  key={isGraphicTab ? "graphic" : featuredProject.slug}
+                  className="work-animated-wrap"
+                  initial={{ opacity: 0, y: 14 }}
+                  animate={{ opacity: 1, y: 0 }}
+                  exit={{ opacity: 0, y: -14 }}
+                  transition={{ duration: 0.36, ease: [0.16, 1, 0.3, 1] }}
+                >
+                  <div className="work-cards-row">
                     <TransitionLink
                       to={isGraphicTab ? "/works" : `/works/${featuredProject.slug}`}
-                      label={isGraphicTab ? "WORKS" : featuredProject.title.toUpperCase()}
-                      className="work-case-link"
+                      label={isGraphicTab ? "WORK" : featuredProject.title.toUpperCase()}
+                      className="work-primary-card"
+                      onMouseEnter={() => setCursorVariant({ mode: "media", text: "VIEW" })}
+                      onMouseLeave={() => setCursorVariant({ mode: "default", text: "" })}
                     >
-                      {isGraphicTab ? "Explore Gallery ↗" : "Open Case Study ↗"}
+                      <ProjectVisual
+                        slug={isGraphicTab ? "graphic-showcase" : featuredProject.slug}
+                      />
                     </TransitionLink>
-                    {!isGraphicTab && featuredProject.liveUrl && (
-                      <a
-                        href={featuredProject.liveUrl}
-                        target="_blank"
-                        rel="noopener noreferrer"
-                        className="work-live-link"
-                      >
-                        Live Site ↗
-                      </a>
-                    )}
+
+                    <div className="work-code-card">
+                      <div className="work-code-header">
+                        <span className="code-dots">
+                          <i />
+                          <i />
+                          <i />
+                        </span>
+                        <span>
+                          {isGraphicTab ? "kirulabs-studio.art" : `${featuredProject.slug}.spec`}
+                        </span>
+                      </div>
+                      <pre className="work-code-pre">
+                        <code>
+                          {isGraphicTab
+                            ? `// KiruLabs Visual Studio\nconst archive = [\n  "KiruLabs — May Day",\n  "ACCA 35° — Poster",\n  "KOKONSAH — Jersey",\n  "Y2K Baddie — Lookbook",\n  "Third Eye — Halftone"\n];`
+                            : featuredProject.codePreview}
+                        </code>
+                      </pre>
+                    </div>
                   </div>
-                </div>
-                <p className="work-editorial-desc">
-                  <span className="desc-arrow">( → )</span>{" "}
-                  {isGraphicTab
-                    ? "Selected campaign posters, streetwear jersey graphics, fashion lookbooks, and halftone illustrations crafted in Accra."
-                    : featuredProject.tagline}
-                </p>
-              </div>
+
+                  <div className="work-meta-strip">
+                    <span className="work-meta-muted">
+                      — {isGraphicTab ? "Visual Direction & Posters · 05 Pieces" : featuredProject.category}
+                    </span>
+                    <span className="work-meta-strong">
+                      {isGraphicTab
+                        ? "2025–2026    Art Direction"
+                        : `${featuredProject.year}    ${featuredProject.role}`}
+                    </span>
+                  </div>
+
+                  <div className="work-editorial-bottom">
+                    <div className="section-index section-index-lg">03/</div>
+                    <div className="work-editorial-title">
+                      <h3>{isGraphicTab ? "Graphic Design" : featuredProject.title}</h3>
+                      <div className="work-case-links">
+                        <TransitionLink
+                          to={isGraphicTab ? "/works" : `/works/${featuredProject.slug}`}
+                          label={isGraphicTab ? "WORK" : featuredProject.title.toUpperCase()}
+                          className="work-case-link"
+                        >
+                          {isGraphicTab ? "Open Gallery ↗" : "Case Study ↗"}
+                        </TransitionLink>
+                        {!isGraphicTab && featuredProject.liveUrl && (
+                          <a
+                            href={featuredProject.liveUrl}
+                            target="_blank"
+                            rel="noopener noreferrer"
+                            className="work-live-link"
+                          >
+                            Live ↗
+                          </a>
+                        )}
+                      </div>
+                    </div>
+                    <p className="work-editorial-desc">
+                      <span className="desc-arrow">( → )</span>{" "}
+                      {isGraphicTab
+                        ? "Campaign posters, streetwear jerseys, editorial lookbooks, and halftone print art crafted in Accra."
+                        : featuredProject.tagline}
+                    </p>
+                  </div>
+                </motion.div>
+              </AnimatePresence>
             </div>
           </div>
         </section>
 
-        {/* PANEL 04 — KINETIC WORDMARK TRANSITION */}
+        {/* PANEL 04 — EXTREME WHITESPACE KINETIC WORDMARK */}
         <section className="home-panel panel-wordmark" data-chapter="3">
           <div className="wordmark-inner">
             <div className="wordmark-top-row">
-              <div>
-                <div className="section-index">04/</div>
-                <p className="wordmark-eyebrow">Creative Developer + Visual Artist</p>
+              <div className="section-index">04/</div>
+              <div className="wordmark-cols">
+                <div>
+                  <strong>Creative Developer</strong>
+                  <span>+ Visual Artist</span>
+                </div>
+                <p className="wordmark-note">
+                  Crafting expressive, human-centered solutions to real-world problems.
+                </p>
               </div>
-              <p className="wordmark-note">
-                Crafting expressive, human-centered digital products from concept to production.
-              </p>
             </div>
 
             <div className="kinetic-wordmark" aria-label="SELASI">
               {"SELASI".split("").map((letter, idx) => (
-                <span key={idx} className="kinetic-letter">
+                <motion.span
+                  key={idx}
+                  className="kinetic-letter"
+                  whileHover={{ y: -26, rotate: idx % 2 === 0 ? -3 : 3, color: "#ff5d1f" }}
+                  transition={{ type: "spring", stiffness: 280, damping: 16 }}
+                >
                   {letter}
-                </span>
+                </motion.span>
               ))}
             </div>
           </div>
         </section>
 
-        {/* PANEL 05 — CREAM TO BLACK GRADIENT BRIDGE */}
+        {/* PANEL 05 — ATMOSPHERIC GRADIENT BRIDGE */}
         <section className="home-panel panel-gradient" aria-hidden="true" />
 
         {/* PANEL 06 — PITCH-BLACK OUTRO */}
         <div className="home-panel panel-outro-wrap" data-chapter="4">
-          <DarkOutro
-            isHorizontal={isDesktop}
-            onBack={() => jumpToChapter(0)}
-          />
+          <DarkOutro isHorizontal={isDesktop} onBack={() => jumpToChapter(0)} />
         </div>
       </div>
     </main>

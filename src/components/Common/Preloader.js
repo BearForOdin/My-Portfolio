@@ -1,99 +1,137 @@
 import React, { useEffect, useState } from "react";
+import { motion, AnimatePresence, animate } from "framer-motion";
+
+const CURTAIN_COVERED = "M 0 0 V 100 Q 50 100 100 100 V 0 z";
+const CURTAIN_CURVE = "M 0 0 V 50 Q 50 100 100 50 V 0 z";
+const CURTAIN_GONE = "M 0 0 V 0 Q 50 0 100 0 V 0 z";
+
+const WORDS = [
+  { text: "OWN", accent: false },
+  { text: "THE", accent: false },
+  { text: "SPACE", accent: true },
+];
 
 export default function Preloader({ onComplete }) {
   const [percent, setPercent] = useState(0);
-  const [phase, setPhase] = useState("loading"); // loading | holding | exiting | done
+  const [stage, setStage] = useState("loading"); // loading | wordsOut | curtainOut | done
 
   useEffect(() => {
-    let start = null;
-    let rafId = null;
-    const duration = 1450; // snappy, tactile editorial pace
-
-    const step = (ts) => {
-      if (!start) start = ts;
-      const elapsed = ts - start;
-      const raw = Math.min(1, elapsed / duration);
-      // Ease-out cubic for natural deceleration near 100%
-      const eased = 1 - Math.pow(1 - raw, 3);
-      const nextVal = Math.round(eased * 100);
-      setPercent(nextVal);
-
-      if (raw < 1) {
-        rafId = requestAnimationFrame(step);
-      } else {
-        setPhase("holding");
-      }
-    };
-
-    rafId = requestAnimationFrame(step);
-    return () => cancelAnimationFrame(rafId);
+    const controls = animate(0, 100, {
+      duration: 1.55,
+      ease: [0.22, 1, 0.36, 1],
+      onUpdate: (latest) => setPercent(Math.round(latest)),
+      onComplete: () => setStage("wordsOut"),
+    });
+    return () => controls.stop();
   }, []);
 
   useEffect(() => {
-    if (phase === "holding") {
-      const t1 = setTimeout(() => setPhase("exiting"), 360);
-      return () => clearTimeout(t1);
+    if (stage === "wordsOut") {
+      const t = setTimeout(() => setStage("curtainOut"), 360);
+      return () => clearTimeout(t);
     }
-    if (phase === "exiting") {
-      const t2 = setTimeout(() => {
-        setPhase("done");
+    if (stage === "curtainOut") {
+      const t = setTimeout(() => {
+        setStage("done");
         if (onComplete) onComplete();
       }, 720);
-      return () => clearTimeout(t2);
+      return () => clearTimeout(t);
     }
-  }, [phase, onComplete]);
-
-  if (phase === "done") return null;
-
-  const formatted = String(percent).padStart(3, "0");
+  }, [stage, onComplete]);
 
   return (
-    <div
-      className={`pl-overlay pl-${phase}`}
-      role="status"
-      aria-label={`Loading portfolio ${percent}%`}
-    >
-      {/* Top Bar */}
-      <div className="pl-bar pl-top">
-        <span className="pl-meta">SELASI DZEAMESI // KIRULABS</span>
-        <span className="pl-counter">{formatted}%</span>
-      </div>
+    <AnimatePresence>
+      {stage !== "done" && (
+        <motion.div
+          className="pl-overlay"
+          role="status"
+          aria-label={`Loading ${percent}%`}
+          initial={{ opacity: 1 }}
+          exit={{ opacity: 0, transition: { duration: 0.15 } }}
+        >
+          {/* Curved SVG Curtain Background (matching douglus.site exit wave) */}
+          <svg
+            className="pl-svg"
+            viewBox="0 0 100 100"
+            preserveAspectRatio="none"
+            aria-hidden="true"
+          >
+            <motion.path
+              fill="#0e0e0e"
+              initial={{ d: CURTAIN_COVERED }}
+              animate={
+                stage === "curtainOut"
+                  ? {
+                      d: [CURTAIN_COVERED, CURTAIN_CURVE, CURTAIN_GONE],
+                    }
+                  : { d: CURTAIN_COVERED }
+              }
+              transition={
+                stage === "curtainOut"
+                  ? {
+                      duration: 0.72,
+                      times: [0, 0.48, 1],
+                      ease: [0.76, 0, 0.24, 1],
+                    }
+                  : { duration: 0 }
+              }
+            />
+          </svg>
 
-      {/* Center Monumental Phrase: OWN THE SPACE */}
-      <div className="pl-center">
-        <div className="pl-eyebrow">CREATIVE DEVELOPER · ACCRA, GHANA</div>
-        <div className="pl-phrase" aria-label="OWN THE SPACE">
-          <span className="pl-word-mask">
-            <span className="pl-word" style={{ animationDelay: "60ms" }}>
-              OWN
-            </span>
-          </span>
-          <span className="pl-word-mask">
-            <span className="pl-word" style={{ animationDelay: "150ms" }}>
-              THE
-            </span>
-          </span>
-          <span className="pl-word-mask">
-            <span className="pl-word pl-word-accent" style={{ animationDelay: "240ms" }}>
-              SPACE<span className="pl-dot">.</span>
-            </span>
-          </span>
-        </div>
+          {/* Foreground: ONLY left-aligned "OWN THE SPACE" + percentage */}
+          <div className="pl-inner">
+            <div className="pl-left-stage">
+              <div className="pl-phrase" aria-label="OWN THE SPACE">
+                {WORDS.map((word, idx) => {
+                  const reverseIdx = WORDS.length - 1 - idx;
+                  const isExiting = stage === "wordsOut" || stage === "curtainOut";
+                  return (
+                    <span key={word.text} className="pl-word-mask">
+                      <motion.span
+                        className={`pl-word ${word.accent ? "pl-word-accent" : ""}`}
+                        initial={{ y: "115%", opacity: 0 }}
+                        animate={
+                          isExiting
+                            ? { y: "-115%", opacity: 0 }
+                            : { y: "0%", opacity: 1 }
+                        }
+                        transition={
+                          isExiting
+                            ? {
+                                duration: 0.42,
+                                delay: reverseIdx * 0.045,
+                                ease: [0.55, 0.055, 0.675, 0.19],
+                              }
+                            : {
+                                duration: 0.65,
+                                delay: 0.06 + idx * 0.075,
+                                ease: [0.215, 0.61, 0.355, 1],
+                              }
+                        }
+                      >
+                        {word.text}
+                      </motion.span>
+                    </span>
+                  );
+                })}
+              </div>
+            </div>
 
-        {/* Hairline Progress Rule */}
-        <div className="pl-rule-track">
-          <div
-            className="pl-rule-fill"
-            style={{ transform: `scaleX(${percent / 100})` }}
-          />
-        </div>
-      </div>
-
-      {/* Bottom Bar */}
-      <div className="pl-bar pl-bottom">
-        <span className="pl-meta">SOFTWARE · ART · LEADERSHIP</span>
-        <span className="pl-meta">PORTFOLIO © 2026</span>
-      </div>
-    </div>
+            <motion.div
+              className="pl-counter"
+              initial={{ opacity: 0, y: 12 }}
+              animate={
+                stage === "wordsOut" || stage === "curtainOut"
+                  ? { opacity: 0, y: -12 }
+                  : { opacity: 1, y: 0 }
+              }
+              transition={{ duration: 0.35, ease: [0.215, 0.61, 0.355, 1] }}
+            >
+              {percent}%
+            </motion.div>
+          </div>
+        </motion.div>
+      )}
+    </AnimatePresence>
   );
 }

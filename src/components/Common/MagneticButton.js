@@ -1,4 +1,5 @@
-import React, { useRef, useState } from "react";
+import React, { useRef } from "react";
+import { motion, useMotionValue, useSpring } from "framer-motion";
 import { usePageTransition } from "../TransitionContext";
 
 export default function MagneticButton({
@@ -14,34 +15,38 @@ export default function MagneticButton({
   ...rest
 }) {
   const ref = useRef(null);
-  const [offset, setOffset] = useState({ x: 0, y: 0 });
+  const x = useMotionValue(0);
+  const y = useMotionValue(0);
+  const springX = useSpring(x, { stiffness: 260, damping: 18, mass: 0.4 });
+  const springY = useSpring(y, { stiffness: 260, damping: 18, mass: 0.4 });
   const { navigateWithTransition } = usePageTransition();
 
   const handleMouseMove = (e) => {
     if (!ref.current) return;
     const rect = ref.current.getBoundingClientRect();
-    const x = (e.clientX - (rect.left + rect.width / 2)) * strength;
-    const y = (e.clientY - (rect.top + rect.height / 2)) * strength;
-    setOffset({ x, y });
+    x.set((e.clientX - (rect.left + rect.width / 2)) * strength);
+    y.set((e.clientY - (rect.top + rect.height / 2)) * strength);
   };
 
   const handleMouseLeave = () => {
-    setOffset({ x: 0, y: 0 });
+    x.set(0);
+    y.set(0);
   };
 
-  const style = {
-    transform: `translate3d(${offset.x}px, ${offset.y}px, 0)`,
+  const motionProps = {
+    ref,
+    style: { x: springX, y: springY },
+    onMouseMove: handleMouseMove,
+    onMouseLeave: handleMouseLeave,
+    whileTap: { scale: 0.96 },
   };
 
   if (to) {
     return (
-      <a
-        ref={ref}
+      <motion.a
+        {...motionProps}
         href={to}
         className={`magnetic-btn ${className}`}
-        style={style}
-        onMouseMove={handleMouseMove}
-        onMouseLeave={handleMouseLeave}
         onClick={(e) => {
           if (e.metaKey || e.ctrlKey || e.shiftKey || e.altKey) return;
           e.preventDefault();
@@ -51,41 +56,35 @@ export default function MagneticButton({
         {...rest}
       >
         <span className="magnetic-btn-inner">{children}</span>
-      </a>
+      </motion.a>
     );
   }
 
   if (href) {
     return (
-      <a
-        ref={ref}
+      <motion.a
+        {...motionProps}
         href={href}
         target={target}
         rel={rel || (target === "_blank" ? "noopener noreferrer" : undefined)}
         className={`magnetic-btn ${className}`}
-        style={style}
-        onMouseMove={handleMouseMove}
-        onMouseLeave={handleMouseLeave}
         onClick={onClick}
         {...rest}
       >
         <span className="magnetic-btn-inner">{children}</span>
-      </a>
+      </motion.a>
     );
   }
 
   return (
-    <button
-      ref={ref}
+    <motion.button
+      {...motionProps}
       type="button"
       className={`magnetic-btn ${className}`}
-      style={style}
-      onMouseMove={handleMouseMove}
-      onMouseLeave={handleMouseLeave}
       onClick={onClick}
       {...rest}
     >
       <span className="magnetic-btn-inner">{children}</span>
-    </button>
+    </motion.button>
   );
 }

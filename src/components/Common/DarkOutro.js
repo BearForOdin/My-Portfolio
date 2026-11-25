@@ -1,10 +1,11 @@
 import React from "react";
-import { usePageTransition } from "../TransitionContext";
+import { motion } from "framer-motion";
+import { TransitionLink, usePageTransition } from "../TransitionContext";
 import MagneticButton from "./MagneticButton";
 import { PROFILE } from "../../data/portfolioData";
 
 export default function DarkOutro({ onBack, backLabel = "Back to top", isHorizontal = false }) {
-  const { copyText } = usePageTransition();
+  const { copyText, setCursorVariant } = usePageTransition();
 
   const handleBack = () => {
     if (onBack) {
@@ -17,17 +18,24 @@ export default function DarkOutro({ onBack, backLabel = "Back to top", isHorizon
   return (
     <section className={`ed-outro ${isHorizontal ? "ed-outro-horizontal" : ""}`}>
       <div className="ed-outro-inner">
-        <div className="ed-outro-eyebrow">
-          <span className="ed-status-dot" />
-          <span>{PROFILE.availability}</span>
-        </div>
+        <motion.h2
+          className="ed-outro-headline"
+          initial={{ opacity: 0.9, y: 24 }}
+          whileInView={{ opacity: 1, y: 0 }}
+          viewport={{ once: true, amount: 0.3 }}
+          transition={{ duration: 0.7, ease: [0.16, 1, 0.3, 1] }}
+        >
+          Let&apos;s have a chat
+        </motion.h2>
 
-        <h2 className="ed-outro-headline">Let&apos;s have a chat</h2>
+        <div className="ed-outro-rule" />
 
         <div className="ed-outro-actions">
           <MagneticButton
             className="ed-dark-pill"
             onClick={() => copyText(PROFILE.email, "Email copied")}
+            onMouseEnter={() => setCursorVariant({ mode: "link", text: "" })}
+            onMouseLeave={() => setCursorVariant({ mode: "default", text: "" })}
           >
             {PROFILE.email}
           </MagneticButton>
@@ -35,16 +43,19 @@ export default function DarkOutro({ onBack, backLabel = "Back to top", isHorizon
           <MagneticButton
             className="ed-dark-pill"
             onClick={() => copyText(PROFILE.phone, "Phone copied")}
+            onMouseEnter={() => setCursorVariant({ mode: "link", text: "" })}
+            onMouseLeave={() => setCursorVariant({ mode: "default", text: "" })}
           >
             {PROFILE.phone}
           </MagneticButton>
 
-          <MagneticButton to="/resume" label="RESUME" className="ed-dark-pill ed-dark-pill-accent">
-            Resume / CV ↗
-          </MagneticButton>
-
-          <MagneticButton className="ed-dark-pill ed-dark-pill-ghost" onClick={handleBack}>
-            {isHorizontal ? "← Back to 01/" : `↑ ${backLabel}`}
+          <MagneticButton
+            className="ed-dark-pill ed-dark-pill-back"
+            onClick={handleBack}
+            onMouseEnter={() => setCursorVariant({ mode: "link", text: "" })}
+            onMouseLeave={() => setCursorVariant({ mode: "default", text: "" })}
+          >
+            {isHorizontal ? "←——— Back" : `↑ ${backLabel}`}
           </MagneticButton>
         </div>
 
@@ -59,11 +70,11 @@ export default function DarkOutro({ onBack, backLabel = "Back to top", isHorizon
             Medium ↗
           </a>
           <a href={PROFILE.socials.twitter} target="_blank" rel="noopener noreferrer">
-            X / Twitter ↗
+            X ↗
           </a>
-          <a href={PROFILE.socials.instagram} target="_blank" rel="noopener noreferrer">
-            Instagram ↗
-          </a>
+          <TransitionLink to="/resume" label="RESUME">
+            Resume ↗
+          </TransitionLink>
         </div>
       </div>
     </section>

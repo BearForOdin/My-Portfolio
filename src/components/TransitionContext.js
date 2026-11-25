@@ -1,5 +1,6 @@
 import React, { createContext, useContext, useState, useCallback, useRef } from "react";
 import { useNavigate, useLocation } from "react-router-dom";
+import { motion, AnimatePresence } from "framer-motion";
 
 const TransitionContext = createContext(null);
 
@@ -7,9 +8,18 @@ export function usePageTransition() {
   return useContext(TransitionContext);
 }
 
+// Verbatim SVG morphing wave coordinates inspired by douglus.site
+const COVER_START = "M 0 100 V 100 Q 50 100 100 100 V 100 z";
+const COVER_CURVE = "M 0 100 V 50 Q 50 0 100 50 V 100 z";
+const COVER_END = "M 0 100 V 0 Q 50 0 100 0 V 100 z";
+
+const REVEAL_START = "M 0 0 V 100 Q 50 100 100 100 V 0 z";
+const REVEAL_CURVE = "M 0 0 V 50 Q 50 100 100 50 V 0 z";
+const REVEAL_END = "M 0 0 V 0 Q 50 0 100 0 V 0 z";
+
 function getDestinationLabel(to) {
   if (to === "/" || to === "") return "HOME";
-  if (to === "/works" || to === "/project") return "WORKS";
+  if (to === "/works" || to === "/project") return "WORK";
   if (to === "/about") return "ABOUT";
   if (to === "/contact") return "CONTACT";
   if (to === "/resume") return "RESUME";
@@ -25,9 +35,10 @@ function getDestinationLabel(to) {
 export function TransitionProvider({ children }) {
   const navigate = useNavigate();
   const location = useLocation();
-  const [phase, setPhase] = useState("idle"); // idle | entering | holding | leaving
+  const [phase, setPhase] = useState("idle"); // idle | covering | covered | revealing
   const [label, setLabel] = useState("");
   const [toast, setToast] = useState(null);
+  const [cursorVariant, setCursorVariant] = useState({ mode: "default", text: "" });
   const lockRef = useRef(false);
   const toastTimerRef = useRef(null);
 
@@ -40,7 +51,7 @@ export function TransitionProvider({ children }) {
   }, []);
 
   const copyText = useCallback(
-    (text, labelText = "Copied to clipboard") => {
+    (text, labelText = "Copied") => {
       if (navigator.clipboard && navigator.clipboard.writeText) {
         navigator.clipboard.writeText(text).then(
           () => showToast(`${labelText}: ${text}`),
@@ -63,65 +74,138 @@ export function TransitionProvider({ children }) {
 
       lockRef.current = true;
       setLabel(customLabel || getDestinationLabel(to));
-      setPhase("entering");
+      setPhase("covering");
 
-      // Navigate once curtain covers screen
+      // Swap route once dome wave reaches full cover
       setTimeout(() => {
         navigate(to);
         window.scrollTo(0, 0);
-        setPhase("holding");
-      }, 420);
+        setPhase("covered");
+      }, 620);
 
-      // Reveal new page
+      // Begin top-anchored curved reveal
       setTimeout(() => {
-        setPhase("leaving");
-      }, 760);
+        setPhase("revealing");
+      }, 1020);
 
-      // Reset to idle
+      // Unlock and clear overlay
       setTimeout(() => {
         setPhase("idle");
         lockRef.current = false;
-      }, 1220);
+      }, 1680);
     },
     [navigate, location.pathname]
   );
 
+  const isActive = phase !== "idle";
+  const showTitle = phase === "covering" || phase === "covered";
+
   return (
     <TransitionContext.Provider
-      value={{ navigateWithTransition, showToast, copyText, isTransitioning: phase !== "idle" }}
+      value={{
+        navigateWithTransition,
+        showToast,
+        copyText,
+        isTransitioning: isActive,
+        cursorVariant,
+        setCursorVariant,
+      }}
     >
       {children}
 
-      {/* SVG Curved Curtain Transition Overlay */}
-      <div
-        className={`curtain-overlay curtain-${phase}`}
-        aria-hidden={phase === "idle"}
-      >
-        <svg
-          className="curtain-svg"
-          viewBox="0 0 100 100"
-          preserveAspectRatio="none"
-        >
-          <path
-            className="curtain-path"
-            d="M 0 0 L 100 0 L 100 100 Q 50 100 0 100 Z"
-          />
-        </svg>
-        <div className="curtain-content">
-          <span className="curtain-eyebrow">NAVIGATING TO</span>
-          <div className="curtain-title">{label}</div>
-          <div className="curtain-rule" />
-        </div>
-      </div>
+      {/* Framer Motion SVG Dome-Wave Curtain Overlay */}
+      <AnimatePresence>
+        {isActive && (
+          <div className="curtain-overlay" aria-hidden="true">
+            <svg
+              className="curtain-svg"
+              viewBox="0 0 100 100"
+              preserveAspectRatio="none"
+            >
+              {phase === "revealing" ? (
+                <motion.path
+                  key="reveal-path"
+                  fill="#1c1d20"
+                  initial={{ d: REVEAL_START }}
+                  animate={{ d: [REVEAL_START, REVEAL_CURVE, REVEAL_END] }}
+                  transition={{
+                    duration: 0.64,
+                    times: [0, 0.48, 1],
+                    ease: [0.76, 0, 0.24, 1],
+                  }}
+                />
+              ) : (
+                <motion.path
+                  key="cover-path"
+                  fill="#1c1d20"
+                  initial={{ d: COVER_START }}
+                  animate={{ d: [COVER_START, COVER_CURVE, COVER_END] }}
+                  transition={{
+                    duration: 0.62,
+                    times: [0, 0.48, 1],
+                    ease: [0.76, 0, 0.24, 1],
+                  }}
+                />
+              )}
+            </svg>
 
-      {/* Interaction Lock */}
-      {phase !== "idle" && <div className="interaction-lock" />}
+            <div className="curtain-stage">
+              <div className="ts-line-dest">
+                <motion.div
+                  className="ts-word"
+                  initial={{ y: "110%", opacity: 0 }}
+                  animate={
+                    showTitle
+                      ? { y: "0%", opacity: 1 }
+                      : { y: "-110%", opacity: 0 }
+                  }
+                  transition={
+                    showTitle
+                      ? { duration: 0.42, delay: 0.24, ease: [0.215, 0.61, 0.355, 1] }
+                      : { duration: 0.28, ease: [0.55, 0.055, 0.675, 0.19] }
+                  }
+                >
+                  {label}
+                </motion.div>
+              </div>
+              <motion.div
+                className="ts-rule"
+                initial={{ scaleX: 0, opacity: 0 }}
+                animate={
+                  showTitle
+                    ? { scaleX: 1, opacity: 1 }
+                    : { scaleX: 0, opacity: 0 }
+                }
+                transition={
+                  showTitle
+                    ? { duration: 0.38, delay: 0.32, ease: [0.455, 0.03, 0.515, 0.955] }
+                    : { duration: 0.2, ease: "easeIn" }
+                }
+              />
+            </div>
+          </div>
+        )}
+      </AnimatePresence>
+
+      {/* Interaction Lock during transition */}
+      {isActive && <div className="interaction-lock" />}
 
       {/* Minimal Editorial Toast */}
-      <div className={`editorial-toast ${toast ? "is-visible" : ""}`} role="status">
-        <span className="toast-dot" />
-        <span>{toast}</span>
-      </div>
+      <AnimatePresence>
+        {toast && (
+          <motion.div
+            className="editorial-toast"
+            role="status"
+            initial={{ opacity: 0, y: 14, x: "-50%" }}
+            animate={{ opacity: 1, y: 0, x: "-50%" }}
+            exit={{ opacity: 0, y: 10, x: "-50%" }}
+            transition={{ duration: 0.28, ease: [0.16, 1, 0.3, 1] }}
+          >
+            <span className="toast-dot" />
+            <span>{toast}</span>
+          </motion.div>
+        )}
+      </AnimatePresence>
     </TransitionContext.Provider>
   );
 }
