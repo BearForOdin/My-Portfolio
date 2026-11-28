@@ -14,21 +14,26 @@ export default function NavBar() {
   const [scrolled, setScrolled] = useState(false);
   const popoverRef = useRef(null);
 
-  const [isMobile, setIsMobile] = useState(
-    typeof window !== "undefined" ? window.innerWidth < 1024 : false
+  // Match douglus.site 1200px desktop <-> mobile/tablet switch
+  const [isCompact, setIsCompact] = useState(
+    typeof window !== "undefined" ? window.innerWidth < 1200 : false
   );
 
   useEffect(() => {
-    const onResize = () => setIsMobile(window.innerWidth < 1024);
+    const onResize = () => {
+      const compact = window.innerWidth < 1200;
+      setIsCompact(compact);
+      if (!compact) setMenuOpen(false);
+    };
     window.addEventListener("resize", onResize);
     return () => window.removeEventListener("resize", onResize);
   }, []);
 
   const isScrollablePage =
-    (location.pathname !== "/" || isMobile) && location.pathname !== "/contact";
+    (location.pathname !== "/" || isCompact) && location.pathname !== "/contact";
 
   useEffect(() => {
-    if (!isScrollablePage) {
+    if (!isScrollablePage || menuOpen) {
       setScrolled(false);
       return;
     }
@@ -36,7 +41,7 @@ export default function NavBar() {
     onScroll();
     window.addEventListener("scroll", onScroll, { passive: true });
     return () => window.removeEventListener("scroll", onScroll);
-  }, [isScrollablePage, location.pathname]);
+  }, [isScrollablePage, location.pathname, menuOpen]);
 
   useEffect(() => {
     if (!emailOpen) return;
@@ -48,6 +53,16 @@ export default function NavBar() {
     document.addEventListener("mousedown", handleOutside);
     return () => document.removeEventListener("mousedown", handleOutside);
   }, [emailOpen]);
+
+  // Lock body scroll when mobile drawer is open
+  useEffect(() => {
+    if (!menuOpen) return;
+    const prev = document.body.style.overflow;
+    document.body.style.overflow = "hidden";
+    return () => {
+      document.body.style.overflow = prev;
+    };
+  }, [menuOpen]);
 
   const isActive = (path) => {
     if (path === "/works") {
@@ -68,9 +83,13 @@ export default function NavBar() {
 
   return (
     <>
-      <header className={`ed-navbar ${isScrollablePage && scrolled ? "is-scrolled" : ""}`}>
+      <header
+        className={`ed-navbar ${
+          !menuOpen && isScrollablePage && scrolled ? "is-scrolled" : ""
+        } ${menuOpen ? "is-menu-open" : ""}`}
+      >
         <div className="ed-navbar-inner">
-          {/* Left: Kinetic expanding logo */}
+          {/* Left: Kinetic expanding logo (desktop) / crisp Selasi (mobile) */}
           <TransitionLink
             to="/"
             label="HOME"
@@ -94,7 +113,7 @@ export default function NavBar() {
             </span>
           </TransitionLink>
 
-          {/* Center: Minimal comma-separated 3-item nav */}
+          {/* Center: Minimal comma-separated 3-item nav (Desktop >= 1200px) */}
           <nav className="ed-nav-center" aria-label="Primary">
             {navItems.map((item, idx) => (
               <React.Fragment key={item.to}>
@@ -117,7 +136,7 @@ export default function NavBar() {
             ))}
           </nav>
 
-          {/* Right: Github, LinkedIn, Email */}
+          {/* Right: Github, LinkedIn, Email (Desktop >= 1200px) */}
           <div className="ed-nav-right">
             <a
               href={PROFILE.socials.github}
@@ -154,7 +173,7 @@ export default function NavBar() {
             </button>
           </div>
 
-          {/* Mobile Menu Toggle */}
+          {/* Mobile & Tablet (< 1200px): Plain borderless "Menu" / "Close" text matching douglus.site */}
           <button
             type="button"
             className="ed-mobile-toggle"
@@ -167,7 +186,7 @@ export default function NavBar() {
         </div>
       </header>
 
-      {/* Signature Vermilion Email Popover (outside difference blend so color stays pure #FF6432) */}
+      {/* Signature Vermilion Email Popover (Desktop) */}
       <AnimatePresence>
         {emailOpen && (
           <motion.div
@@ -215,64 +234,72 @@ export default function NavBar() {
         )}
       </AnimatePresence>
 
-      {/* Mobile Fullscreen Editorial Drawer */}
+      {/* Mobile & Tablet Fullscreen Drawer (Exact douglus.site coral-red bold centered links) */}
       <AnimatePresence>
         {menuOpen && (
           <motion.div
-            className="ed-mobile-drawer is-open"
-            initial={{ y: "-100%" }}
-            animate={{ y: "0%" }}
-            exit={{ y: "-100%" }}
-            transition={{ duration: 0.56, ease: [0.16, 1, 0.3, 1] }}
+            className="m-menu-overlay"
+            initial={{ opacity: 0, y: "-4%" }}
+            animate={{ opacity: 1, y: "0%" }}
+            exit={{ opacity: 0, y: "-4%" }}
+            transition={{ duration: 0.38, ease: [0.16, 1, 0.3, 1] }}
           >
-            <div className="ed-mobile-drawer-inner">
-              <div className="ed-mobile-links">
+            <nav className="m-menu-list" aria-label="Mobile Navigation">
+              <TransitionLink
+                to="/"
+                label="HOME"
+                className="m-menu-item m-menu-home"
+                onClick={() => setMenuOpen(false)}
+              >
+                <span className="m-menu-tag">intro</span>
+                <span>HOME</span>
+              </TransitionLink>
+
+              {navItems.map((item) => (
                 <TransitionLink
-                  to="/"
-                  label="HOME"
-                  className="ed-mobile-link"
+                  key={item.to}
+                  to={item.to}
+                  label={item.curtain}
+                  className="m-menu-item"
                   onClick={() => setMenuOpen(false)}
                 >
-                  <span className="ed-mobile-idx">00/</span> Home
+                  {item.label.toUpperCase()}
                 </TransitionLink>
-                {navItems.map((item, idx) => (
-                  <TransitionLink
-                    key={item.to}
-                    to={item.to}
-                    label={item.curtain}
-                    className="ed-mobile-link"
-                    onClick={() => setMenuOpen(false)}
-                  >
-                    <span className="ed-mobile-idx">0{idx + 1}/</span> {item.label}
-                  </TransitionLink>
-                ))}
-              </div>
+              ))}
+            </nav>
 
-              <div className="ed-mobile-meta">
+            <footer className="m-menu-footer">
+              <div className="m-menu-contact">
                 <button
                   type="button"
-                  className="ed-mobile-email"
                   onClick={() => copyText(PROFILE.email, "Email copied")}
                 >
                   {PROFILE.email}
                 </button>
-                <div className="ed-mobile-socials">
-                  <a href={PROFILE.socials.github} target="_blank" rel="noopener noreferrer">
-                    GitHub ↗
-                  </a>
-                  <a href={PROFILE.socials.linkedin} target="_blank" rel="noopener noreferrer">
-                    LinkedIn ↗
-                  </a>
-                  <TransitionLink
-                    to="/resume"
-                    label="RESUME"
-                    onClick={() => setMenuOpen(false)}
-                  >
-                    Resume ↗
-                  </TransitionLink>
-                </div>
+                <button
+                  type="button"
+                  onClick={() => copyText(PROFILE.phone, "Phone copied")}
+                >
+                  {PROFILE.phone}
+                </button>
               </div>
-            </div>
+              <div className="m-menu-socials">
+                <a
+                  href={PROFILE.socials.github}
+                  target="_blank"
+                  rel="noopener noreferrer"
+                >
+                  Github
+                </a>
+                <a
+                  href={PROFILE.socials.linkedin}
+                  target="_blank"
+                  rel="noopener noreferrer"
+                >
+                  LinkedIn
+                </a>
+              </div>
+            </footer>
           </motion.div>
         )}
       </AnimatePresence>

@@ -4,6 +4,7 @@ import { TransitionLink, usePageTransition } from "../components/TransitionConte
 import MagneticButton from "../components/Common/MagneticButton";
 import DarkOutro from "../components/Common/DarkOutro";
 import ProjectVisual from "../components/Common/ProjectVisual";
+import HomeMobile from "../components/Home/HomeMobile";
 import { BullseyeEmblem, SmileyEmblem, NodeEmblem } from "../components/Common/Emblems";
 import { PROFILE, DISCIPLINES, PROJECTS } from "../data/portfolioData";
 import portraitImg from "../Assets/profhead.png";
@@ -138,8 +139,9 @@ export default function HomePage({ ready = true, onProgressChange, registerJumpH
   const maxScrollRef = useRef(0);
   const rafRef = useRef(null);
 
+  // Match douglus.site exact 1200px Desktop <-> Mobile/Tablet breakpoint
   const [isDesktop, setIsDesktop] = useState(
-    typeof window !== "undefined" ? window.innerWidth >= 1024 : true
+    typeof window !== "undefined" ? window.innerWidth >= 1200 : true
   );
   const [activeDiscipline, setActiveDiscipline] = useState("frontend");
   const [featuredIdx, setFeaturedIdx] = useState(0);
@@ -161,7 +163,7 @@ export default function HomePage({ ready = true, onProgressChange, registerJumpH
 
   useEffect(() => {
     const handleResize = () => {
-      const desktop = window.innerWidth >= 1024;
+      const desktop = window.innerWidth >= 1200;
       setIsDesktop(desktop);
       if (desktop && trackRef.current) {
         maxScrollRef.current = Math.max(
@@ -278,12 +280,12 @@ export default function HomePage({ ready = true, onProgressChange, registerJumpH
           progress < 0.16
             ? 0
             : progress < 0.38
-            ? 1
-            : progress < 0.64
-            ? 2
-            : progress < 0.84
-            ? 3
-            : 4;
+              ? 1
+              : progress < 0.64
+                ? 2
+                : progress < 0.84
+                  ? 3
+                  : 4;
 
         if (
           onProgressChange &&
@@ -311,22 +313,22 @@ export default function HomePage({ ready = true, onProgressChange, registerJumpH
   const activeDisciplineObj =
     DISCIPLINES.find((d) => d.id === activeDiscipline) || DISCIPLINES[1];
 
+  // Below 1200px (Tablet & Mobile), render dedicated Swiss-editorial HomeMobile layout
+  if (!isDesktop) {
+    return <HomeMobile ready={ready} />;
+  }
+
   return (
-    <main className={`home-viewport ${isDesktop ? "is-horizontal" : "is-vertical"}`}>
+    <main className="home-viewport is-horizontal">
       <div ref={trackRef} className="home-track">
         {/* PANEL 01 — RADICAL SIMPLICITY HERO */}
         <section className="home-panel panel-intro" data-chapter="0">
-          <motion.div
-            className="panel-intro-grid"
-            initial={{ scale: 1.025 }}
-            animate={ready ? { scale: 1 } : { scale: 1.025 }}
-            transition={{ duration: 0.85, ease: [0.16, 1, 0.3, 1] }}
-          >
+          <div className="panel-intro-grid">
             <motion.div
               className="intro-top-left"
-              initial={{ opacity: 0, y: 14 }}
-              animate={ready ? { opacity: 1, y: 0 } : { opacity: 0, y: 14 }}
-              transition={{ duration: 0.65, delay: 0.14, ease: [0.16, 1, 0.3, 1] }}
+              initial={{ opacity: 0, y: 12 }}
+              animate={ready ? { opacity: 1, y: 0 } : { opacity: 0, y: 12 }}
+              transition={{ duration: 0.62, delay: 0.08, ease: [0.16, 1, 0.3, 1] }}
             >
               <div className="section-index">01/</div>
               <div className="intro-origin">
@@ -337,10 +339,10 @@ export default function HomePage({ ready = true, onProgressChange, registerJumpH
             {/* Title stays "Creative Developer." */}
             <div className="intro-top-right">
               <h1 className="hero-display hero-display-right">
-                <MaskedLine ready={ready} delay={0.1}>
+                <MaskedLine ready={ready} delay={0.04}>
                   CREATIVE
                 </MaskedLine>
-                <MaskedLine ready={ready} delay={0.17}>
+                <MaskedLine ready={ready} delay={0.11}>
                   DEVELOPER<span className="accent">.</span>
                 </MaskedLine>
               </h1>
@@ -348,10 +350,10 @@ export default function HomePage({ ready = true, onProgressChange, registerJumpH
 
             <div className="intro-bottom-left">
               <div className="hero-display hero-display-left" aria-label={PROFILE.fullName}>
-                <MaskedLine ready={ready} delay={0.2}>
+                <MaskedLine ready={ready} delay={0.14}>
                   SELASI
                 </MaskedLine>
-                <MaskedLine ready={ready} delay={0.27}>
+                <MaskedLine ready={ready} delay={0.21}>
                   DZEAMESI
                 </MaskedLine>
               </div>
@@ -359,9 +361,9 @@ export default function HomePage({ ready = true, onProgressChange, registerJumpH
 
             <motion.div
               className="intro-bottom-right"
-              initial={{ opacity: 0, y: 24 }}
-              animate={ready ? { opacity: 1, y: 0 } : { opacity: 0, y: 24 }}
-              transition={{ duration: 0.72, delay: 0.18, ease: [0.16, 1, 0.3, 1] }}
+              initial={{ opacity: 0, y: 20 }}
+              animate={ready ? { opacity: 1, y: 0 } : { opacity: 0, y: 20 }}
+              transition={{ duration: 0.68, delay: 0.14, ease: [0.16, 1, 0.3, 1] }}
             >
               <DraggablePortrait />
               <div className="intro-bio-row">
@@ -373,7 +375,7 @@ export default function HomePage({ ready = true, onProgressChange, registerJumpH
                 </p>
               </div>
             </motion.div>
-          </motion.div>
+          </div>
         </section>
 
         {/* PANEL 02 — CAPABILITIES & DISCIPLINES */}
@@ -403,9 +405,8 @@ export default function HomePage({ ready = true, onProgressChange, registerJumpH
                   <motion.div
                     key={d.id}
                     role="listitem"
-                    className={`discipline-word ${
-                      activeDiscipline === d.id ? "is-highlighted" : ""
-                    }`}
+                    className={`discipline-word ${activeDiscipline === d.id ? "is-highlighted" : ""
+                      }`}
                     onMouseEnter={() => setActiveDiscipline(d.id)}
                     animate={{
                       x: activeDiscipline === d.id ? -14 : 0,

@@ -17,6 +17,11 @@ const REVEAL_START = "M 0 0 V 100 Q 50 100 100 100 V 0 z";
 const REVEAL_CURVE = "M 0 0 V 50 Q 50 100 100 50 V 0 z";
 const REVEAL_END = "M 0 0 V 0 Q 50 0 100 0 V 0 z";
 
+// Stable animation targets (prevents keyframe array recreation / glitchy replays)
+const COVER_ANIM = { d: [COVER_START, COVER_CURVE, COVER_END] };
+const COVER_HOLD = { d: COVER_END };
+const REVEAL_ANIM = { d: [REVEAL_START, REVEAL_CURVE, REVEAL_END] };
+
 function getDestinationLabel(to) {
   if (to === "/" || to === "") return "HOME";
   if (to === "/works" || to === "/project") return "WORK";
@@ -122,31 +127,27 @@ export function TransitionProvider({ children }) {
               viewBox="0 0 100 100"
               preserveAspectRatio="none"
             >
-              {phase === "revealing" ? (
-                <motion.path
-                  key="reveal-path"
-                  fill="#1c1d20"
-                  initial={{ d: REVEAL_START }}
-                  animate={{ d: [REVEAL_START, REVEAL_CURVE, REVEAL_END] }}
-                  transition={{
-                    duration: 0.64,
-                    times: [0, 0.48, 1],
-                    ease: [0.76, 0, 0.24, 1],
-                  }}
-                />
-              ) : (
-                <motion.path
-                  key="cover-path"
-                  fill="#1c1d20"
-                  initial={{ d: COVER_START }}
-                  animate={{ d: [COVER_START, COVER_CURVE, COVER_END] }}
-                  transition={{
-                    duration: 0.62,
-                    times: [0, 0.48, 1],
-                    ease: [0.76, 0, 0.24, 1],
-                  }}
-                />
-              )}
+              {/* Single persistent SVG path (zero unmount flash & zero keyframe replay) */}
+              <motion.path
+                fill="#1c1d20"
+                initial={{ d: COVER_START }}
+                animate={
+                  phase === "revealing"
+                    ? REVEAL_ANIM
+                    : phase === "covered"
+                    ? COVER_HOLD
+                    : COVER_ANIM
+                }
+                transition={
+                  phase === "covered"
+                    ? { duration: 0 }
+                    : {
+                        duration: phase === "revealing" ? 0.64 : 0.62,
+                        times: [0, 0.48, 1],
+                        ease: [0.76, 0, 0.24, 1],
+                      }
+                }
+              />
             </svg>
 
             <div className="curtain-stage">

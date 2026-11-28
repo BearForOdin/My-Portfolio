@@ -2459,15 +2459,9 @@ button {
   position: fixed;
   inset: 0;
   z-index: 9999;
-  background: transparent;
+  background: #0e0e0e;
   pointer-events: all;
-}
-
-.pl-svg {
-  position: absolute;
-  inset: 0;
-  width: 100%;
-  height: 100%;
+  will-change: opacity;
 }
 
 .pl-inner {
@@ -3329,5 +3323,719 @@ button {
   .wordmark-statue-wrap {
     left: 32%;
     width: 56%;
+  }
+}
+
+/* ==========================================================================
+   DOUGLUS.SITE RESPONSIVE ARCHITECTURE (< 1200px MOBILE & TABLET)
+   ========================================================================== */
+
+.ed-navbar.is-menu-open {
+  mix-blend-mode: normal;
+  color: #ffffff;
+  background: transparent;
+}
+
+/* Mobile & Tablet Fullscreen Drawer (Exact douglus.site coral-red bold centered nav) */
+.m-menu-overlay {
+  position: fixed;
+  inset: 0;
+  z-index: 860;
+  background: #050505;
+  color: #fee9ce;
+  display: flex;
+  flex-direction: column;
+  justify-content: space-between;
+  padding-top: var(--nav-h);
+}
+
+.m-menu-list {
+  flex: 1;
+  display: flex;
+  flex-direction: column;
+  align-items: center;
+  justify-content: center;
+  gap: 2.8rem;
+}
+
+.m-menu-item {
+  font-family: var(--font-display);
+  font-size: clamp(3.6rem, 12vw, 8.5rem);
+  font-weight: 800;
+  letter-spacing: -0.025em;
+  line-height: 0.78;
+  color: #ef5143;
+  text-transform: uppercase;
+  display: inline-flex;
+  align-items: flex-start;
+  transition: opacity 0.2s ease, transform 0.3s var(--ease-expo);
+}
+
+.m-menu-item:hover {
+  opacity: 0.84;
+  transform: scale(1.02);
+}
+
+.m-menu-home {
+  gap: 0.45rem;
+  transform: translateX(-1.2rem);
+}
+
+.m-menu-tag {
+  font-family: var(--font-sans);
+  font-size: 0.85rem;
+  font-weight: 600;
+  letter-spacing: 0.02em;
+  text-transform: lowercase;
+  color: #fee9ce;
+  line-height: 1;
+  margin-top: 0.25rem;
+}
+
+.m-menu-footer {
+  display: grid;
+  grid-template-columns: 1fr 1fr;
+  padding: 1.5rem 2rem;
+  font-size: 0.9rem;
+  color: #fee9ce;
+  gap: 16px;
+}
+
+.m-menu-contact,
+.m-menu-socials {
+  display: flex;
+  flex-direction: column;
+  gap: 6px;
+}
+
+.m-menu-contact button {
+  background: none;
+  border: none;
+  padding: 0;
+  color: inherit;
+  font-size: inherit;
+  text-align: left;
+}
+
+.m-menu-socials {
+  align-items: flex-end;
+  text-align: right;
+}
+
+/* ==========================================================================
+   HOME MOBILE & TABLET (< 1200px) — TOKENIZED SWISS EDITORIAL STACK
+   ========================================================================== */
+
+.m-home {
+  --px: 1.5rem;
+  --section-gap: 7rem;
+  --block-gap: 2.5rem;
+  --t-xs: 0.72rem;
+  --t-sm: 0.85rem;
+  --t-base: 1rem;
+  --t-3xl: 3rem;
+  --t-4xl: 4.5rem;
+  --t-huge: 10rem;
+  --emblem-size: 130px;
+  --outro-pt: 240px;
+
+  background: var(--cream);
+  color: var(--ink);
+  width: 100%;
+  overflow-x: hidden;
+}
+
+.m-sec {
+  padding-inline: var(--px);
+}
+
+.m-idx {
+  font-family: var(--font-mono);
+  font-size: var(--t-xs);
+  font-weight: 500;
+  letter-spacing: 0.04em;
+  color: var(--ink);
+}
+
+/* 01/ HERO */
+.m-hero {
+  padding-top: calc(var(--nav-h) + 28px);
+  padding-bottom: var(--section-gap);
+  display: flex;
+  flex-direction: column;
+  gap: 1.25rem;
+}
+
+.m-hero-top {
+  display: flex;
+  justify-content: space-between;
+  align-items: flex-start;
+}
+
+.m-name,
+.m-title {
+  margin: 0;
+  font-family: var(--font-display);
+  font-size: var(--t-4xl);
+  font-weight: 500;
+  line-height: 0.88;
+  letter-spacing: -0.03em;
+  text-transform: uppercase;
+}
+
+.m-name {
+  transform: translateX(-0.04em);
+}
+
+.m-title {
+  text-align: right;
+  transform: translateX(0.04em);
+  flex-shrink: 0;
+}
+
+.m-hero-photo-wrap {
+  width: 100%;
+  aspect-ratio: 1.18 / 1;
+  overflow: hidden;
+  background: #141416;
+}
+
+.m-hero-photo {
+  width: 100%;
+  height: 100%;
+  object-fit: cover;
+  object-position: center 20%;
+  display: block;
+}
+
+.m-hero-bottom {
+  display: flex;
+  justify-content: space-between;
+  align-items: flex-end;
+  gap: 12px;
+  padding-top: 0.35rem;
+}
+
+.m-hero-bio {
+  display: flex;
+  flex-direction: column;
+  gap: 2px;
+  font-size: var(--t-xs);
+  font-weight: 500;
+  letter-spacing: 0.04em;
+  text-transform: uppercase;
+  color: rgba(10, 10, 10, 0.42);
+  line-height: 1.4;
+}
+
+/* 02/ CAPABILITIES */
+.m-craft {
+  padding-bottom: var(--section-gap);
+  display: flex;
+  flex-direction: column;
+  gap: var(--block-gap);
+}
+
+.m-craft-top {
+  display: flex;
+  justify-content: space-between;
+  align-items: flex-start;
+  gap: 20px;
+}
+
+.m-craft-statement {
+  margin: 0;
+  font-family: var(--font-display);
+  font-size: var(--t-sm);
+  font-weight: 500;
+  line-height: 1.5;
+  text-align: right;
+  text-transform: uppercase;
+  letter-spacing: 0.02em;
+}
+
+.m-discipline-stack {
+  display: flex;
+  flex-direction: column;
+  align-items: flex-start;
+}
+
+.m-discipline-word {
+  font-family: var(--font-display);
+  font-size: calc(var(--t-4xl) * 0.92);
+  font-weight: 700;
+  line-height: 0.88;
+  letter-spacing: -0.035em;
+  text-transform: uppercase;
+  color: var(--ink);
+}
+
+.m-discipline-word.is-accent {
+  color: var(--accent);
+}
+
+.m-craft-foot {
+  display: flex;
+  justify-content: space-between;
+  align-items: flex-end;
+  gap: 16px;
+}
+
+.m-emblems {
+  display: flex;
+  align-items: center;
+  gap: 12px;
+}
+
+.m-emblem-svg {
+  width: var(--emblem-size) !important;
+  height: var(--emblem-size) !important;
+}
+
+.m-cta {
+  display: inline-block;
+  font-family: var(--font-display);
+  font-size: var(--t-xs);
+  font-weight: 700;
+  letter-spacing: 0.1em;
+  text-transform: uppercase;
+  padding-bottom: 0.25rem;
+  border-bottom: 1.5px solid currentColor;
+  white-space: nowrap;
+}
+
+.m-cta-accent {
+  color: var(--accent);
+}
+
+/* 03/ FEATURED WORK */
+.m-work {
+  padding-bottom: var(--section-gap);
+}
+
+.m-work-switcher {
+  display: flex;
+  justify-content: space-between;
+  align-items: center;
+  gap: 12px;
+  margin-bottom: 14px;
+}
+
+.m-work-tabs {
+  display: flex;
+  flex-wrap: wrap;
+  gap: 12px;
+}
+
+.m-work-tab {
+  background: none;
+  border: none;
+  padding: 2px 0;
+  font-size: 0.78rem;
+  font-weight: 500;
+  color: var(--muted);
+  display: inline-flex;
+  align-items: baseline;
+  gap: 4px;
+}
+
+.m-work-tab span {
+  font-family: var(--font-mono);
+  font-size: 0.68rem;
+  color: var(--accent);
+}
+
+.m-work-tab.is-active {
+  color: var(--ink);
+  font-weight: 700;
+  border-bottom: 1.5px solid var(--ink);
+}
+
+.m-process-image {
+  display: block;
+  width: 100%;
+  margin-bottom: 14px;
+}
+
+.m-process-image .pv-frame {
+  border-radius: 6px;
+  min-height: 250px;
+}
+
+.m-process-meta {
+  display: flex;
+  justify-content: space-between;
+  align-items: center;
+  margin-bottom: 12px;
+}
+
+.m-process-role {
+  font-family: var(--font-mono);
+  font-size: var(--t-xs);
+  color: var(--muted);
+  letter-spacing: 0.04em;
+}
+
+.m-hairline {
+  width: 100%;
+  height: 1px;
+  background: var(--rule);
+  margin-bottom: 18px;
+}
+
+.m-process-title {
+  margin: 0 0 var(--block-gap);
+  font-family: var(--font-display);
+  font-size: calc(var(--t-3xl) * 1.18);
+  font-weight: 700;
+  line-height: 0.9;
+  letter-spacing: -0.03em;
+  transform: translateX(-0.04em);
+}
+
+.m-process-desc {
+  margin: 0 0 20px;
+  font-size: var(--t-base);
+  line-height: 1.55;
+  color: var(--ink-soft);
+}
+
+.m-process-links {
+  display: flex;
+  align-items: center;
+  gap: 24px;
+  margin-bottom: 28px;
+}
+
+.m-secondary-artifact {
+  width: 78%;
+  margin-left: auto;
+}
+
+.m-code-card {
+  border-radius: 8px;
+}
+
+/* 04/ IDENTITY + STATUE + SHARP ARCHITECTURAL HORIZON SEAM */
+.m-identity {
+  padding-top: 12px;
+  padding-bottom: 0;
+  overflow: hidden;
+  display: flex;
+  flex-direction: column;
+  gap: 4.5rem;
+}
+
+.m-identity-head {
+  display: flex;
+  flex-direction: column;
+  gap: 14px;
+}
+
+.m-identity-role {
+  display: flex;
+  flex-direction: column;
+  font-size: 1.05rem;
+  line-height: 1.3;
+}
+
+.m-identity-role span {
+  color: var(--muted);
+}
+
+.m-identity-sub {
+  margin: 0;
+  font-size: 0.95rem;
+  line-height: 1.45;
+  color: var(--muted);
+}
+
+.m-wordmark-stage {
+  position: relative;
+  width: 100%;
+  padding-top: 26%;
+  padding-bottom: 6px;
+}
+
+.m-statue-wrap {
+  position: absolute;
+  left: 33%;
+  bottom: 0;
+  width: 54%;
+  max-width: 380px;
+  z-index: 1;
+  pointer-events: none;
+  transform-origin: 55% 75%;
+  filter: drop-shadow(0 14px 26px rgba(0, 0, 0, 0.14));
+}
+
+.m-wordmark {
+  position: relative;
+  z-index: 2;
+  display: flex;
+  justify-content: space-between;
+  align-items: flex-end;
+  line-height: 0.76;
+}
+
+.m-wordmark-letter {
+  font-family: var(--font-display);
+  font-size: clamp(3.5rem, 17.5vw, 9.5rem);
+  font-weight: 700;
+  letter-spacing: -0.05em;
+  color: var(--ink);
+  transition: color 0.3s ease;
+}
+
+.m-wordmark-letter.is-pointed {
+  color: var(--accent);
+}
+
+/* 05/ DARK OUTRO — Exact douglus.site Kinetic 3-Row "Let's / HAVE / a chat" */
+.m-outro {
+  background: #0e0e0e;
+  color: #fee9ce;
+  padding: var(--outro-pt) var(--px) 28px;
+  display: flex;
+  flex-direction: column;
+  gap: 2.4rem;
+}
+
+.m-outro-idx {
+  text-align: right;
+  font-family: var(--font-mono);
+  font-size: var(--t-xs);
+  color: rgba(254, 233, 206, 0.35);
+}
+
+.m-outro-display {
+  display: flex;
+  flex-direction: column;
+  gap: 0.15rem;
+}
+
+.m-outro-row {
+  font-family: var(--font-impact);
+  line-height: 0.85;
+  letter-spacing: 0.01em;
+}
+
+.m-outro-left {
+  align-self: flex-start;
+  text-align: left;
+}
+
+.m-outro-right {
+  align-self: flex-end;
+  text-align: right;
+}
+
+.m-outro-muted {
+  font-size: clamp(3.4rem, 13vw, 6.2rem);
+  font-weight: 800;
+  color: rgba(254, 233, 206, 0.48);
+}
+
+.m-outro-huge {
+  font-size: var(--t-huge);
+  font-weight: 900;
+  color: #fee9ce;
+}
+
+.m-outro-bottom {
+  display: flex;
+  justify-content: space-between;
+  align-items: flex-end;
+  gap: 16px;
+  padding-top: 2rem;
+}
+
+.m-outro-links {
+  display: flex;
+  flex-direction: column;
+  align-items: flex-start;
+  gap: 6px;
+}
+
+.m-outro-link {
+  background: none;
+  border: none;
+  padding: 0;
+  font-size: var(--t-sm);
+  letter-spacing: 0.02em;
+  color: rgba(254, 233, 206, 0.42);
+  text-align: left;
+  transition: color 0.2s ease;
+}
+
+.m-outro-link:hover {
+  color: #fee9ce;
+}
+
+.m-outro-back {
+  background: none;
+  border: none;
+  padding: 0;
+  font-family: var(--font-mono);
+  font-size: var(--t-xs);
+  font-weight: 500;
+  letter-spacing: 0.08em;
+  color: rgba(254, 233, 206, 0.45);
+  white-space: nowrap;
+}
+
+.m-outro-back:hover {
+  color: #fee9ce;
+}
+
+.m-outro-legal {
+  display: flex;
+  justify-content: space-between;
+  align-items: center;
+  padding-top: 1.5rem;
+  border-top: 1px solid rgba(254, 233, 206, 0.12);
+  font-size: clamp(0.74rem, 2.8vw, 0.88rem);
+  color: rgba(254, 233, 206, 0.78);
+}
+
+/* ==========================================================================
+   DISCRETE RESPONSIVE BREAKPOINTS (1199px -> 992px -> 768px -> 560px -> 400px)
+   ========================================================================== */
+
+@media (max-width: 1199px) {
+  .ed-nav-center,
+  .ed-nav-right,
+  .ed-footerbar,
+  .works-floating-preview {
+    display: none !important;
+  }
+
+  .ed-navbar-inner {
+    grid-template-columns: 1fr auto;
+    padding: 0 20px;
+  }
+
+  .ed-logo-expand {
+    display: none;
+  }
+
+  /* Plain borderless "Menu" / "Close" toggle matching douglus.site */
+  .ed-mobile-toggle {
+    display: inline-flex;
+    align-items: center;
+    border: none;
+    border-radius: 0;
+    padding: 4px 0;
+    font-family: var(--font-display);
+    font-size: 1.15rem;
+    font-weight: 400;
+    letter-spacing: -0.01em;
+  }
+
+  .ed-mobile-toggle:focus:not(:focus-visible) {
+    outline: none;
+  }
+
+  .ed-logo {
+    font-size: 1.15rem;
+    font-weight: 400;
+  }
+}
+
+@media (max-width: 992px) {
+  .m-home {
+    --px: 1.25rem;
+    --section-gap: 6rem;
+    --block-gap: 2rem;
+    --t-3xl: 2.5rem;
+    --t-4xl: 3.5rem;
+    --emblem-size: 110px;
+    --outro-pt: 180px;
+  }
+
+  .ed-page-title {
+    font-size: 4rem;
+  }
+
+  .about-giant-name {
+    font-size: 4rem;
+  }
+}
+
+@media (max-width: 768px) {
+  .m-menu-list {
+    gap: 2rem;
+  }
+
+  .m-menu-footer {
+    font-size: 0.84rem;
+    padding: 1.25rem 1.25rem;
+  }
+
+  .contact-poster-page {
+    height: auto;
+    min-height: 100dvh;
+    padding: 108px 1rem 72px;
+  }
+
+  .poster-word {
+    font-size: clamp(3rem, 15vw, 4.8rem);
+  }
+
+  .poster-row-2 {
+    flex-direction: column;
+    align-items: flex-start;
+    gap: 14px;
+  }
+
+  .poster-word-3 {
+    padding-left: 0;
+  }
+
+  .contact-val {
+    font-size: 1rem;
+  }
+}
+
+@media (max-width: 560px) {
+  .m-home {
+    --px: 1rem;
+    --section-gap: 5rem;
+    --block-gap: 1.75rem;
+    --t-3xl: 2.2rem;
+    --t-4xl: 3rem;
+    --t-huge: 8rem;
+    --emblem-size: 90px;
+    --outro-pt: 150px;
+  }
+
+  .ed-page-title {
+    font-size: 3.2rem;
+  }
+
+  .ed-page-title-sm {
+    font-size: 2.6rem;
+  }
+
+  .about-giant-name {
+    font-size: 3.2rem;
+  }
+
+  .m-secondary-artifact {
+    width: 86%;
+  }
+}
+
+@media (max-width: 400px) {
+  .m-home {
+    --t-4xl: 2.55rem;
+  }
+
+  .ed-page-title {
+    font-size: 2.8rem;
+  }
+
+  .about-giant-name {
+    font-size: 2.85rem;
   }
 }
